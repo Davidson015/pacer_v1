@@ -196,5 +196,29 @@
     "isoDate": "2026-08-29T17:04:24+00:00",
     "subject": "Scope the live dashboard to the latest runner",
     "body": ""
+  },
+  {
+    "hash": "9a2f96a",
+    "isoDate": "2026-08-29T17:04:53+00:00",
+    "subject": "Refresh build map commit snapshot",
+    "body": ""
+  },
+  {
+    "hash": "9186b52",
+    "isoDate": "2026-08-29T17:08:43+00:00",
+    "subject": "Resolve OpenAI coach model configuration",
+    "body": ""
+  },
+  {
+    "hash": "a92eefa",
+    "isoDate": "2026-08-29T17:31:28+00:00",
+    "subject": "Scope run metrics per runner",
+    "body": ""
+  },
+  {
+    "hash": "b4fd492",
+    "isoDate": "2026-08-29T17:31:31+00:00",
+    "subject": "Document the Pacer application",
+    "body": ""
   }
 ]
