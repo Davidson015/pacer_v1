@@ -12,6 +12,7 @@ export type Runner = {
 const fallbackPoints: RunPoint[] = [];
 const fallbackSignups: Signup[] = [];
 const fallbackRunners: Runner[] = [];
+let fallbackGreeting: { greeting: string; updatedAt: string } | null = null;
 
 function hasBlobStorage(): boolean {
   return Boolean(process.env.BLOB_READ_WRITE_TOKEN);
@@ -232,5 +233,43 @@ export async function listRunners(): Promise<Runner[]> {
       .map(({ runner }) => runner);
   } catch {
     return [];
+  }
+}
+
+export async function saveGreeting(greeting: string): Promise<string> {
+  const updatedAt = new Date().toISOString();
+  fallbackGreeting = { greeting, updatedAt };
+
+  if (!hasBlobStorage()) return updatedAt;
+
+  await put(
+    "config/greeting.json",
+    JSON.stringify({ greeting, updatedAt }),
+    {
+      access: "public",
+      addRandomSuffix: false,
+      contentType: "application/json",
+    },
+  );
+  return updatedAt;
+}
+
+export async function getGreeting(): Promise<string | null> {
+  if (!hasBlobStorage()) return fallbackGreeting?.greeting ?? null;
+
+  try {
+    const { blobs } = await list({ prefix: "config/greeting.json" });
+    const blob = blobs.find((item) => item.pathname === "config/greeting.json");
+    if (!blob) return null;
+    const response = await fetch(blob.url, { cache: "no-store" });
+    if (!response.ok) return null;
+    const value: unknown = await response.json();
+    if (typeof value !== "object" || value === null) return null;
+    const raw = value as Record<string, unknown>;
+    return typeof raw.greeting === "string" && raw.greeting.trim() !== ""
+      ? raw.greeting
+      : null;
+  } catch {
+    return null;
   }
 }

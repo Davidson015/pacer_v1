@@ -30,6 +30,40 @@ export default function CoachPage() {
 
   useEffect(() => {
     let cancelled = false;
+    async function loadGreeting() {
+      try {
+        const response = await fetch("/api/admin/greeting", {
+          cache: "no-store",
+        });
+        if (!response.ok) return;
+        const data = (await response.json()) as { greeting?: unknown };
+        const greeting =
+          typeof data.greeting === "string" && data.greeting.trim() !== ""
+            ? data.greeting
+            : OPENING.content;
+        if (cancelled) return;
+        setMessages((current) => {
+          const opening = { role: "assistant" as const, content: greeting };
+          return current.length > 0
+            ? [opening, ...current.slice(1)]
+            : [opening];
+        });
+      } catch {
+        // Keep the default opening when the greeting service is unavailable.
+      }
+    }
+
+    const initial = window.setTimeout(() => void loadGreeting(), 0);
+    const timer = window.setInterval(loadGreeting, 20000);
+    return () => {
+      cancelled = true;
+      window.clearTimeout(initial);
+      window.clearInterval(timer);
+    };
+  }, []);
+
+  useEffect(() => {
+    let cancelled = false;
     fetch("/api/speak")
       .then((response) => response.json())
       .then((data: { available?: boolean }) => {
@@ -209,7 +243,7 @@ export default function CoachPage() {
     if (question === "" || pending) return;
 
     const history: ChatMessage[] = [
-      ...messages.filter((message) => message !== OPENING),
+      ...messages.slice(1),
       { role: "user", content: question },
     ];
     const shown: ChatMessage[] = [
