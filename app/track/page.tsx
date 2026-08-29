@@ -175,8 +175,15 @@ export default function TrackPage() {
 
         const pace = paceFromFix(position, lastAcceptedFixRef.current);
         if (pace === null || !Number.isFinite(pace) || pace <= 0) {
+          // Without a pace there is nothing honest to send, but this fix is the
+          // baseline the next one measures against.
+          lastAcceptedFixRef.current = {
+            latitude: position.coords.latitude,
+            longitude: position.coords.longitude,
+            timestampMs: position.timestamp,
+          };
           setStatusMessage(
-            "Location received; waiting for speed so I can measure honestly.",
+            "Location received; waiting for movement so I can measure honestly.",
           );
           return;
         }
