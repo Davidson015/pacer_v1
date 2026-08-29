@@ -1,5 +1,8 @@
 import { NextResponse } from "next/server";
-import { addSignup, normalizeEmail, signupCount } from "@/lib/signups";
+import { normalizeEmail } from "@/lib/signups";
+import { listSignups, saveSignup } from "@/lib/store";
+
+export const dynamic = "force-dynamic";
 
 export async function POST(request: Request) {
   let body: unknown;
@@ -21,13 +24,25 @@ export async function POST(request: Request) {
     );
   }
 
-  const added = addSignup(email);
-  return NextResponse.json(
-    { email, alreadySignedUp: !added, signupCount: signupCount() },
-    { status: added ? 201 : 200 },
-  );
+  try {
+    const added = await saveSignup(email);
+    const signups = await listSignups();
+    return NextResponse.json(
+      { email, alreadySignedUp: !added, signupCount: signups.length },
+      { status: added ? 201 : 200 },
+    );
+  } catch {
+    return NextResponse.json(
+      { error: "could not save signup" },
+      { status: 502 },
+    );
+  }
 }
 
 export async function GET() {
-  return NextResponse.json({ signupCount: signupCount() });
+  const signups = await listSignups();
+  return NextResponse.json(
+    { signupCount: signups.length },
+    { headers: { "Cache-Control": "no-store" } },
+  );
 }

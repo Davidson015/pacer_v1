@@ -6,7 +6,10 @@ import {
   runContext,
   type ChatMessage,
 } from "@/lib/coach";
-import { getPoints, summarize } from "@/lib/run";
+import { summarize } from "@/lib/run";
+import { listPoints } from "@/lib/store";
+
+export const dynamic = "force-dynamic";
 
 function parseHistory(body: unknown): ChatMessage[] | string {
   if (typeof body !== "object" || body === null) {
@@ -47,7 +50,7 @@ export async function POST(request: Request) {
   }
 
   // Today's real run data is loaded fresh on every reply.
-  const summary = summarize(getPoints());
+  const summary = summarize(await listPoints());
   const context = runContext(summary);
   const quality = dataQuality(summary);
   const apiKey = process.env.OPENAI_API_KEY;

@@ -39,17 +39,6 @@ export type RunSummary = {
 
 export const TRACK_LAP_METERS = 400;
 
-const points: RunPoint[] = [];
-
-export function addPoint(point: RunPoint): RunPoint {
-  points.push(point);
-  return point;
-}
-
-export function getPoints(): RunPoint[] {
-  return [...points];
-}
-
 export function parsePoint(body: unknown): RunPoint | string {
   if (typeof body !== "object" || body === null) {
     return "body must be a JSON object";
@@ -61,7 +50,11 @@ export function parsePoint(body: unknown): RunPoint | string {
       return `${field} must be a finite number`;
     }
   }
-  const strings: Array<keyof RunPoint> = ["timestamp", "runnerName", "teamName"];
+  const strings: Array<keyof RunPoint> = [
+    "timestamp",
+    "runnerName",
+    "teamName",
+  ];
   for (const field of strings) {
     if (typeof raw[field] !== "string" || raw[field] === "") {
       return `${field} must be a non-empty string`;

@@ -1,5 +1,8 @@
 import { NextResponse } from "next/server";
-import { addPoint, getPoints, parsePoint } from "@/lib/run";
+import { parsePoint } from "@/lib/run";
+import { listPoints, savePoint } from "@/lib/store";
+
+export const dynamic = "force-dynamic";
 
 export async function POST(request: Request) {
   let body: unknown;
@@ -14,14 +17,27 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: parsed }, { status: 400 });
   }
 
-  const point = addPoint(parsed);
-  return NextResponse.json(
-    { point, pointCount: getPoints().length },
-    { status: 201 },
-  );
+  try {
+    await savePoint(parsed);
+    const points = await listPoints();
+    return NextResponse.json(
+      { point: parsed, pointCount: points.length },
+      {
+        status: 201,
+      },
+    );
+  } catch {
+    return NextResponse.json(
+      { error: "could not save point" },
+      { status: 502 },
+    );
+  }
 }
 
 export async function GET() {
-  const points = getPoints();
-  return NextResponse.json({ points, pointCount: points.length });
+  const points = await listPoints();
+  return NextResponse.json(
+    { points, pointCount: points.length },
+    { headers: { "Cache-Control": "no-store" } },
+  );
 }

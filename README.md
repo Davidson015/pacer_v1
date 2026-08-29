@@ -30,7 +30,10 @@ Open [http://localhost:3000](http://localhost:3000).
 - `GET /api/speak` — `{ available }`, whether text to speech is configured.
 - `POST /api/speak` — `{ text }`; returns `audio/mpeg` spoken by ElevenLabs (the API key never leaves the server). Running shorthand is expanded for speech only — `5:12/km` becomes "five minutes twelve seconds per kilometre", `km 3` becomes "kilometre three" — so on-screen text stays compact.
 
-Storage is in-process and resets when the server restarts (and is per-instance on serverless).
+Run points and signups are stored durably in Vercel Blob. When
+`BLOB_READ_WRITE_TOKEN` is not set, the app falls back to in-process memory for
+local development and tests; that fallback resets when the server restarts and
+is per-instance on serverless.
 
 ## Coach page
 

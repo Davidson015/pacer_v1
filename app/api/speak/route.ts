@@ -5,8 +5,13 @@ const DEFAULT_VOICE_ID = "21m00Tcm4TlvDq8ikWAM";
 const DEFAULT_MODEL_ID = "eleven_turbo_v2_5";
 const MAX_CHARACTERS = 1000;
 
+export const dynamic = "force-dynamic";
+
 export async function GET() {
-  return NextResponse.json({ available: Boolean(process.env.ELEVENLABS_API_KEY) });
+  return NextResponse.json(
+    { available: Boolean(process.env.ELEVENLABS_API_KEY) },
+    { headers: { "Cache-Control": "no-store" } },
+  );
 }
 
 export async function POST(request: Request) {
