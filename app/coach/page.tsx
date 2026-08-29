@@ -1,12 +1,13 @@
 "use client";
 
 import { useState } from "react";
+import { STARTER_QUESTIONS } from "@/lib/coach";
 
 type ChatMessage = { role: "user" | "assistant"; content: string };
 
 const OPENING: ChatMessage = {
   role: "assistant",
-  content: "Ask me anything about today's run — I'll answer with your splits.",
+  content: "I watched every lap. Ask me and I'll give you the splits.",
 };
 
 export default function CoachPage() {
@@ -15,9 +16,7 @@ export default function CoachPage() {
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  async function send(event: React.FormEvent) {
-    event.preventDefault();
-    const question = input.trim();
+  async function ask(question: string) {
     if (question === "" || pending) return;
 
     const history: ChatMessage[] = [
@@ -50,6 +49,11 @@ export default function CoachPage() {
     }
   }
 
+  function send(event: React.FormEvent) {
+    event.preventDefault();
+    void ask(input.trim());
+  }
+
   return (
     <main className="mx-auto flex w-full max-w-2xl flex-1 flex-col gap-4 p-6">
       <header>
@@ -78,6 +82,20 @@ export default function CoachPage() {
           </div>
         )}
         {error && <div className="text-sm text-red-600">{error}</div>}
+      </div>
+
+      <div className="flex flex-wrap gap-2">
+        {STARTER_QUESTIONS.map((question) => (
+          <button
+            key={question}
+            type="button"
+            onClick={() => void ask(question)}
+            disabled={pending}
+            className="rounded-full border border-gray-300 px-3 py-1 text-sm text-gray-700 disabled:opacity-50 dark:border-gray-700 dark:text-gray-300"
+          >
+            {question}
+          </button>
+        ))}
       </div>
 
       <form onSubmit={send} className="flex gap-2">

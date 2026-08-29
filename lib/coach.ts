@@ -1,10 +1,19 @@
 import type { RunSummary } from "./run";
 
 export const COACH_SYSTEM_PROMPT = [
-  "You are Pacer, a warm, punchy running coach. Two or three short sentences, max ~60 words.",
-  "Always cite specific real numbers from today's run context: distance, average pace, lap paces, fastest and slowest sections.",
-  "Never invent numbers. If the run context has no data, say the run has not started yet and ask for the first data point.",
+  "You are Pacer: a warm, high-energy running coach who was trackside for every lap of today's run.",
+  "Voice: short punchy sentences, max ~50 words total. Speak in second person. Call the runner by name when you know it.",
+  "Every reply must quote at least two exact numbers from the run context below — lap paces, section paces, distance, elapsed time — and name the lap or section they came from.",
+  "Sound like you watched it happen: react to what the splits show (a lap that dropped off, a surge, an even rhythm), then give one instruction tied to those numbers.",
+  "Banned: generic advice ('stay hydrated', 'listen to your body', 'keep it up'), hedging, filler openers, emoji, bullet lists, and any number not present in the context.",
+  "If the context has no data points, say the run has not started and ask for the first data point. Never guess.",
 ].join(" ");
+
+export const STARTER_QUESTIONS = [
+  "How was my pacing today?",
+  "Where did I struggle?",
+  "What should I push on next?",
+];
 
 export function formatPace(minPerKm: number | null): string {
   if (minPerKm === null || !Number.isFinite(minPerKm)) return "n/a";
@@ -48,15 +57,38 @@ export function runContext(summary: RunSummary): string {
 /** Deterministic reply used when no AI provider key is configured. */
 export function fallbackReply(summary: RunSummary): string {
   if (summary.pointCount === 0) {
-    return "No data points yet today — send your first one and I'll call the splits as they land.";
+    return "Run hasn't started — no data points yet. Send me the first one and I'll call the splits as they land.";
   }
-  const fastest = summary.fastestSection
-    ? ` Your fastest section clocked ${formatPace(summary.fastestSection.paceMinPerKm)}`
-    : "";
-  const slowest = summary.slowestSection
-    ? `, the slowest ${formatPace(summary.slowestSection.paceMinPerKm)}.`
-    : ".";
-  return `${(summary.totalDistanceMeters / 1000).toFixed(2)} km down at ${formatPace(summary.averagePaceMinPerKm)}, ${summary.lapCount.toFixed(1)} laps of the track.${fastest}${slowest} Hold that rhythm and keep the turnover quick. (AI coach offline — numbers are live.)`;
+
+  const name = summary.runnerName ? `${summary.runnerName}, ` : "";
+  const lines = [
+    `${name}${(summary.totalDistanceMeters / 1000).toFixed(2)} km, ${summary.lapCount.toFixed(1)} laps, ${formatPace(summary.averagePaceMinPerKm)} average.`,
+  ];
+
+  const paced = summary.laps.filter((lap) => lap.paceMinPerKm !== null);
+  if (paced.length > 1) {
+    const best = paced.reduce((a, b) =>
+      (a.paceMinPerKm ?? 0) <= (b.paceMinPerKm ?? 0) ? a : b,
+    );
+    const worst = paced.reduce((a, b) =>
+      (a.paceMinPerKm ?? 0) >= (b.paceMinPerKm ?? 0) ? a : b,
+    );
+    lines.push(
+      `Lap ${best.lapNumber} was your sharpest at ${formatPace(best.paceMinPerKm)}; lap ${worst.lapNumber} sagged to ${formatPace(worst.paceMinPerKm)}.`,
+    );
+    lines.push(
+      `Next lap, hold ${formatPace(best.paceMinPerKm)} from the gun.`,
+    );
+  } else if (summary.slowestSection && summary.fastestSection) {
+    lines.push(
+      `Quickest section ${formatPace(summary.fastestSection.paceMinPerKm)}, slowest ${formatPace(summary.slowestSection.paceMinPerKm)}.`,
+    );
+    lines.push(
+      `Take the next 400 m at ${formatPace(summary.fastestSection.paceMinPerKm)}.`,
+    );
+  }
+
+  return lines.join(" ");
 }
 
 export type ChatMessage = { role: "user" | "assistant"; content: string };
