@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { STARTER_QUESTIONS } from "@/lib/coach";
 
 type ChatMessage = { role: "user" | "assistant"; content: string };
@@ -16,6 +16,57 @@ export default function CoachPage() {
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [thin, setThin] = useState(false);
+  const [voiceReady, setVoiceReady] = useState(false);
+  const [speakingIndex, setSpeakingIndex] = useState<number | null>(null);
+  const [voiceError, setVoiceError] = useState<string | null>(null);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    fetch("/api/speak")
+      .then((response) => response.json())
+      .then((data: { available?: boolean }) => {
+        if (!cancelled) setVoiceReady(Boolean(data.available));
+      })
+      .catch(() => undefined);
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const speak = useCallback(
+    async (text: string, index: number) => {
+      const audio = audioRef.current;
+      if (!audio) return;
+
+      audio.pause();
+      if (audio.src.startsWith("blob:")) URL.revokeObjectURL(audio.src);
+      setVoiceError(null);
+      setSpeakingIndex(index);
+
+      try {
+        const response = await fetch("/api/speak", {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({ text }),
+        });
+        if (!response.ok) {
+          const data = (await response.json().catch(() => ({}))) as {
+            error?: string;
+          };
+          throw new Error(data.error ?? "speech failed");
+        }
+        audio.src = URL.createObjectURL(await response.blob());
+        await audio.play();
+      } catch (caught) {
+        setSpeakingIndex(null);
+        setVoiceError(
+          caught instanceof Error ? caught.message : "speech failed",
+        );
+      }
+    },
+    [],
+  );
 
   async function ask(question: string) {
     if (question === "" || pending) return;
@@ -24,7 +75,11 @@ export default function CoachPage() {
       ...messages.filter((message) => message !== OPENING),
       { role: "user", content: question },
     ];
-    setMessages([...messages, { role: "user", content: question }]);
+    const shown: ChatMessage[] = [
+      ...messages,
+      { role: "user", content: question },
+    ];
+    setMessages(shown);
     setInput("");
     setPending(true);
     setError(null);
@@ -43,11 +98,10 @@ export default function CoachPage() {
       if (!response.ok || !data.reply) {
         throw new Error(data.error ?? "the coach could not reply");
       }
+      const reply = data.reply;
       setThin(data.dataQuality !== "rich");
-      setMessages((current) => [
-        ...current,
-        { role: "assistant", content: data.reply as string },
-      ]);
+      setMessages([...shown, { role: "assistant", content: reply }]);
+      if (voiceReady) void speak(reply, shown.length);
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : "unexpected error");
     } finally {
@@ -75,11 +129,33 @@ export default function CoachPage() {
             key={index}
             className={
               message.role === "user"
-                ? "self-end rounded-2xl bg-blue-600 px-4 py-2 text-white"
-                : "self-start rounded-2xl bg-gray-100 px-4 py-2 dark:bg-gray-800"
+                ? "flex items-center gap-2 self-end"
+                : "flex items-center gap-2 self-start"
             }
           >
-            {message.content}
+            {message.role === "user" && (
+              <SpeakerButton
+                onClick={() => void speak(message.content, index)}
+                disabled={!voiceReady}
+                active={speakingIndex === index}
+              />
+            )}
+            <div
+              className={
+                message.role === "user"
+                  ? "rounded-2xl bg-blue-600 px-4 py-2 text-white"
+                  : "rounded-2xl bg-gray-100 px-4 py-2 dark:bg-gray-800"
+              }
+            >
+              {message.content}
+            </div>
+            {message.role === "assistant" && (
+              <SpeakerButton
+                onClick={() => void speak(message.content, index)}
+                disabled={!voiceReady}
+                active={speakingIndex === index}
+              />
+            )}
           </div>
         ))}
         {pending && (
@@ -96,6 +172,13 @@ export default function CoachPage() {
           what has actually been recorded.
         </p>
       )}
+
+      {!voiceReady && (
+        <p className="text-sm text-gray-500">
+          Voice is off — set ELEVENLABS_API_KEY to hear the coach.
+        </p>
+      )}
+      {voiceError && <p className="text-sm text-red-600">{voiceError}</p>}
 
       <div className="flex flex-wrap gap-2">
         {STARTER_QUESTIONS.map((question) => (
@@ -127,6 +210,52 @@ export default function CoachPage() {
           Send
         </button>
       </form>
+
+      <audio
+        ref={audioRef}
+        onEnded={() => setSpeakingIndex(null)}
+        onPause={() => setSpeakingIndex(null)}
+        className="hidden"
+      />
     </main>
+  );
+}
+
+function SpeakerButton({
+  onClick,
+  disabled,
+  active,
+}: {
+  onClick: () => void;
+  disabled: boolean;
+  active: boolean;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      disabled={disabled}
+      title={disabled ? "Voice unavailable" : "Play this message"}
+      aria-label={active ? "Playing message" : "Play message aloud"}
+      className="shrink-0 rounded-full border border-gray-300 p-1.5 text-gray-600 disabled:opacity-40 dark:border-gray-700 dark:text-gray-300"
+    >
+      <svg
+        viewBox="0 0 24 24"
+        aria-hidden="true"
+        className={active ? "size-4 animate-pulse" : "size-4"}
+        fill="currentColor"
+      >
+        <path d="M4 9v6h3l5 4V5L7 9H4z" />
+        {active && (
+          <path
+            d="M16 8.5a5 5 0 0 1 0 7"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+          />
+        )}
+      </svg>
+    </button>
   );
 }
