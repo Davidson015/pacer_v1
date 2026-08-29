@@ -5,16 +5,23 @@ import { mkdirSync, writeFileSync } from "node:fs";
 
 const raw = execFileSync(
   "git",
-  ["log", "--reverse", "--pretty=%h%x1f%aI%x1f%s"],
+  ["log", "--reverse", "--pretty=%h%x1f%aI%x1f%s%x1f%B%x1e"],
   { encoding: "utf8" },
 );
 
 const commits = raw
-  .split("\n")
-  .filter((line) => line.trim() !== "")
-  .map((line) => {
-    const [hash, isoDate, subject] = line.split("\u001f");
-    return { hash, isoDate, subject };
+  .split("\u001e")
+  .filter((record) => record.trim() !== "")
+  .map((record) => {
+    record = record.replace(/^(?:\r?\n)+/, "");
+    const [hash, isoDate, subject, message] = record.split("\u001f");
+    const body = message.startsWith(subject)
+      ? message
+          .slice(subject.length)
+          .replace(/^(?:\r?\n)+/, "")
+          .trimEnd()
+      : message.trimEnd();
+    return { hash, isoDate, subject, body };
   });
 
 mkdirSync("data", { recursive: true });

@@ -4,6 +4,7 @@ export type Commit = {
   hash: string;
   isoDate: string;
   subject: string;
+  body?: string;
 };
 
 export type Pin = {
@@ -14,6 +15,9 @@ export type Pin = {
   runnerName: string | null;
   teamName: string | null;
   matchedTimestamp: string | null;
+  latitude: number | null;
+  longitude: number | null;
+  metersIntoLap: number | null;
   /** Seconds between the commit and its matched run point. */
   matchOffsetSeconds: number | null;
   x: number;
@@ -113,6 +117,9 @@ export function buildPins(commits: Commit[], points: RunPoint[]): Pin[] {
         runnerName: null,
         teamName: null,
         matchedTimestamp: null,
+        latitude: null,
+        longitude: null,
+        metersIntoLap: null,
         matchOffsetSeconds: null,
         ...trackPosition(spread),
       };
@@ -135,6 +142,9 @@ export function buildPins(commits: Commit[], points: RunPoint[]): Pin[] {
       runnerName: points[closest].runnerName,
       teamName: points[closest].teamName,
       matchedTimestamp: points[closest].timestamp,
+      latitude: points[closest].latitude,
+      longitude: points[closest].longitude,
+      metersIntoLap: metres % TRACK_LAP_METERS,
       matchOffsetSeconds: Math.round(
         Math.abs(times[closest] - commitTime) / 1000,
       ),

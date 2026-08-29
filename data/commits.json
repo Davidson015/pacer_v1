@@ -2,66 +2,103 @@
   {
     "hash": "e774603",
     "isoDate": "2026-08-29T12:47:43+00:00",
-    "subject": "Add README with setup confirmation"
+    "subject": "Add README with setup confirmation",
+    "body": "Co-Authored-By: Tombri Bowei <tombribowei01@gmail.com>"
   },
   {
     "hash": "821d54a",
     "isoDate": "2026-08-29T13:15:24+00:00",
-    "subject": "Scaffold Pacer Next.js app with TypeScript and homepage tagline"
+    "subject": "Scaffold Pacer Next.js app with TypeScript and homepage tagline",
+    "body": "Bootstrap the Pacer app with create-next-app (App Router, TypeScript, Tailwind,\nESLint) and set the homepage to show 'Pacer' with the tagline 'the coach built by\nthe run'. Also set page metadata and replace the template README.\n\nCo-Authored-By: Tombri Bowei <tombribowei01@gmail.com>"
   },
   {
     "hash": "5aa61cd",
     "isoDate": "2026-08-29T13:29:48+00:00",
-    "subject": "Add run data point ingestion and run summary API endpoints"
+    "subject": "Add run data point ingestion and run summary API endpoints",
+    "body": "POST /api/points validates and appends a run data point (latitude, longitude,\ntimestamp, pace, runnerName, teamName) to an ordered in-process store;\nGET /api/points returns them in order. GET /api/run summarizes the run so far:\nhaversine total distance, average pace in min/km derived from distance and\nelapsed time, and lap count against a 400 m track.\n\nCo-Authored-By: Tombri Bowei <tombribowei01@gmail.com>"
   },
   {
     "hash": "4830734",
     "isoDate": "2026-08-29T14:02:12+00:00",
-    "subject": "Add Coach chat page backed by today's real run data"
+    "subject": "Add Coach chat page backed by today's real run data",
+    "body": "Add /coach chat UI and POST /api/coach, which reloads the stored run on every\nreply and passes distance, average pace, per-lap splits and fastest/slowest\nsections to the model as context. Extend summarize() with 400 m lap splits\n(prorating segments across lap boundaries) plus fastest and slowest sections.\nFalls back to a deterministic reply built from the same real numbers when\nOPENAI_API_KEY is unset or the model call fails.\n\nCo-Authored-By: Tombri Bowei <tombribowei01@gmail.com>"
   },
   {
     "hash": "f9eeaec",
     "isoDate": "2026-08-29T14:08:53+00:00",
-    "subject": "Sharpen coach voice and add three starter questions"
+    "subject": "Sharpen coach voice and add three starter questions",
+    "body": "Rewrite the coach system prompt for a trackside voice: short high-energy\nsentences, at least two exact numbers from today's splits per reply, an explicit\nban on generic advice and on numbers absent from the context. Rebuild the\nno-key fallback the same way, naming the sharpest and slowest laps. Surface\n'How was my pacing today?', 'Where did I struggle?' and 'What should I push on\nnext?' as one-tap starter questions on /coach.\n\nCo-Authored-By: Tombri Bowei <tombribowei01@gmail.com>"
   },
   {
     "hash": "53b630d",
     "isoDate": "2026-08-29T14:34:45+00:00",
-    "subject": "Handle thin or missing run data honestly in the coach"
+    "subject": "Handle thin or missing run data honestly in the coach",
+    "body": "Co-Authored-By: Tombri Bowei <tombribowei01@gmail.com>"
   },
   {
     "hash": "3000c60",
     "isoDate": "2026-08-29T14:42:10+00:00",
-    "subject": "Speak coach replies aloud with ElevenLabs and add per-message speaker buttons"
+    "subject": "Speak coach replies aloud with ElevenLabs and add per-message speaker buttons",
+    "body": "Co-Authored-By: Tombri Bowei <tombribowei01@gmail.com>"
   },
   {
     "hash": "e16202c",
     "isoDate": "2026-08-29T14:55:41+00:00",
-    "subject": "Speak running notation as natural words before sending text to ElevenLabs"
+    "subject": "Speak running notation as natural words before sending text to ElevenLabs",
+    "body": "Co-Authored-By: Tombri Bowei <tombribowei01@gmail.com>"
   },
   {
     "hash": "fba147f",
     "isoDate": "2026-08-29T14:58:36+00:00",
-    "subject": "Make coach speech playback cancel-safe and free audio URLs on cleanup"
+    "subject": "Make coach speech playback cancel-safe and free audio URLs on cleanup",
+    "body": "Co-Authored-By: Tombri Bowei <tombribowei01@gmail.com>"
   },
   {
     "hash": "fdb468a",
     "isoDate": "2026-08-29T15:03:54+00:00",
-    "subject": "Add microphone dictation to the coach chat for a full voice loop"
+    "subject": "Add microphone dictation to the coach chat for a full voice loop",
+    "body": "Co-Authored-By: Tombri Bowei <tombribowei01@gmail.com>"
   },
   {
     "hash": "c42726a",
     "isoDate": "2026-08-29T15:08:19+00:00",
-    "subject": "Add dark landing page with three sections and email signup capture"
+    "subject": "Add dark landing page with three sections and email signup capture",
+    "body": "Co-Authored-By: Tombri Bowei <tombribowei01@gmail.com>"
   },
   {
     "hash": "608e0fe",
     "isoDate": "2026-08-29T15:21:23+00:00",
-    "subject": "Add Live big-screen run board with route, pace, laps and 10s refresh"
+    "subject": "Add Live big-screen run board with route, pace, laps and 10s refresh",
+    "body": "Co-Authored-By: Tombri Bowei <tombribowei01@gmail.com>"
   },
   {
     "hash": "ed23c34",
     "isoDate": "2026-08-29T15:33:46+00:00",
-    "subject": "Add Build Map pinning every commit onto the lap it shipped on"
+    "subject": "Add Build Map pinning every commit onto the lap it shipped on",
+    "body": "Co-Authored-By: Tombri Bowei <tombribowei01@gmail.com>"
+  },
+  {
+    "hash": "ad9df52",
+    "isoDate": "2026-08-29T15:33:46+00:00",
+    "subject": "Refresh build map commit snapshot",
+    "body": "Co-Authored-By: Tombri Bowei <tombribowei01@gmail.com>"
+  },
+  {
+    "hash": "18b88e0",
+    "isoDate": "2026-08-29T15:54:21+00:00",
+    "subject": "Persist run data and signups in Vercel Blob",
+    "body": "Co-Authored-By: Tombri Bowei <tombribowei01@gmail.com>"
+  },
+  {
+    "hash": "0dae974",
+    "isoDate": "2026-08-29T15:54:24+00:00",
+    "subject": "Add build map run summary",
+    "body": "Co-Authored-By: Tombri Bowei <tombribowei01@gmail.com>"
+  },
+  {
+    "hash": "a3abfbe",
+    "isoDate": "2026-08-29T15:55:33+00:00",
+    "subject": "Address signups by digest and fit the time range stat",
+    "body": "Co-Authored-By: Tombri Bowei <tombribowei01@gmail.com>"
   }
 ]

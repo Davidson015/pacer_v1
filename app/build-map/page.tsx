@@ -32,6 +32,13 @@ function timeLabel(iso: string): string {
     : date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
 }
 
+function dateTimeLabel(iso: string): string {
+  const date = new Date(iso);
+  return Number.isNaN(date.getTime())
+    ? "—"
+    : date.toLocaleString([], { dateStyle: "medium", timeStyle: "medium" });
+}
+
 function timeRange(commits: Commit[], points: RunSummary["points"]): string {
   const timestamps = [
     ...commits.map((commit) => commit.isoDate),
@@ -207,6 +214,19 @@ export default function BuildMapPage() {
                 <g
                   key={pin.commit.hash}
                   onClick={() => setSelected(index)}
+                  onKeyDown={(event) => {
+                    if (
+                      event.key === "Enter" ||
+                      event.key === " " ||
+                      event.key === "Spacebar"
+                    ) {
+                      event.preventDefault();
+                      setSelected(index);
+                    }
+                  }}
+                  role="button"
+                  tabIndex={0}
+                  aria-label={`Select commit ${index + 1}: ${pin.commit.subject}`}
                   className="cursor-pointer"
                 >
                   {isActive && (
@@ -258,18 +278,28 @@ export default function BuildMapPage() {
           </svg>
 
           {active && (
-            <div className="pointer-events-none absolute top-6 right-6 max-w-sm rounded-2xl border border-[#c6ff00]/40 bg-black/85 p-5 backdrop-blur">
+            <div className="pointer-events-auto absolute top-6 right-6 max-h-[60vh] max-w-sm overflow-y-auto rounded-2xl border border-[#c6ff00]/40 bg-black/90 p-6 backdrop-blur">
               <p className="font-mono text-xs text-[#c6ff00]">
                 #{selected + 1} · {active.commit.hash} ·{" "}
-                {timeLabel(active.commit.isoDate)}
+                {dateTimeLabel(active.commit.isoDate)}
               </p>
-              <p className="mt-2 text-xl font-bold tracking-tight">
+              <p className="mt-3 text-xl font-bold tracking-tight">
                 {active.commit.subject}
               </p>
-              <p className="mt-3 text-sm text-white/60">
+              {active.commit.body && (
+                <p className="mt-3 whitespace-pre-wrap font-mono text-sm leading-relaxed text-white/70">
+                  {active.commit.body}
+                </p>
+              )}
+              <p className="mt-4 text-base font-bold text-white/80">
                 {active.distanceMeters === null
-                  ? "no run point recorded near this commit yet"
-                  : `lap ${active.lapNumber} · ${Math.round(active.distanceMeters)} m in · ${active.runnerName} running for ${active.teamName}`}
+                  ? "no run point matched; lap position unavailable"
+                  : `lap ${active.lapNumber} · ${active.metersIntoLap?.toFixed(1)} m into the lap · ${active.distanceMeters.toFixed(1)} m total`}
+              </p>
+              <p className="mt-2 text-sm text-white/60">
+                {active.latitude === null || active.longitude === null
+                  ? "no run point matched; coordinates unavailable"
+                  : `coordinates ${active.latitude.toFixed(5)}, ${active.longitude.toFixed(5)} · GPS ${dateTimeLabel(active.matchedTimestamp ?? "")}`}
               </p>
               {offsetNote(active) && (
                 <p className="mt-1 text-xs text-white/40">
