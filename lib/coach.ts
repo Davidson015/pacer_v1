@@ -187,24 +187,55 @@ export async function askModel(
   apiKey: string,
   context: string,
   history: ChatMessage[],
+  {
+    baseUrl,
+    model,
+  }: {
+    baseUrl: string;
+    model: string;
+  },
 ): Promise<string> {
-  const response = await fetch("https://api.openai.com/v1/chat/completions", {
-    method: "POST",
-    headers: {
-      "content-type": "application/json",
-      authorization: `Bearer ${apiKey}`,
-    },
-    body: JSON.stringify({
-      model: process.env.COACH_MODEL ?? "gpt-4o-mini",
-      temperature: 0.7,
-      max_tokens: 200,
-      messages: [
-        { role: "system", content: COACH_SYSTEM_PROMPT },
-        { role: "system", content: context },
-        ...history,
-      ],
-    }),
-  });
+  const endpoint = `${baseUrl.replace(/\/+$/, "")}/chat/completions`;
+  const messages = [
+    { role: "system", content: COACH_SYSTEM_PROMPT },
+    { role: "system", content: context },
+    ...history,
+  ];
+  const isGpt4oFamily = /^(?:[^/]+\/)?gpt-4o(?:[-/]|$)/i.test(model);
+  const payload: Record<string, unknown> = {
+    model,
+    messages,
+    ...(isGpt4oFamily
+      ? { temperature: 0.7, max_tokens: 200 }
+      : { max_completion_tokens: 200 }),
+  };
+  const request = (body: Record<string, unknown>) =>
+    fetch(endpoint, {
+      method: "POST",
+      headers: {
+        "content-type": "application/json",
+        authorization: `Bearer ${apiKey}`,
+      },
+      body: JSON.stringify(body),
+    });
+
+  let response = await request(payload);
+  if (response.status === 400) {
+    const errorText = await response.text();
+    const mentionsUnsupportedParameter =
+      /unsupported parameter|parameter.+(?:not supported|unsupported)|(?:temperature|max_tokens|max_completion_tokens).+(?:not supported|unsupported)/i.test(
+        errorText,
+      );
+    if (mentionsUnsupportedParameter) {
+      const retryPayload = { ...payload };
+      if (/temperature/i.test(errorText)) delete retryPayload.temperature;
+      if (/max_tokens/i.test(errorText)) delete retryPayload.max_tokens;
+      if (/max_completion_tokens/i.test(errorText)) {
+        delete retryPayload.max_completion_tokens;
+      }
+      response = await request(retryPayload);
+    }
+  }
 
   if (!response.ok) {
     throw new Error(`model request failed: ${response.status}`);

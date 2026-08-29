@@ -7,7 +7,7 @@ import {
   type ChatMessage,
 } from "@/lib/coach";
 import { summarize } from "@/lib/run";
-import { listPoints } from "@/lib/store";
+import { getGreeting, listPoints } from "@/lib/store";
 
 export const dynamic = "force-dynamic";
 
@@ -50,10 +50,26 @@ export async function POST(request: Request) {
   }
 
   // Today's real run data is loaded fresh on every reply.
-  const summary = summarize(await listPoints());
-  const context = runContext(summary);
+  const [points, greeting] = await Promise.all([listPoints(), getGreeting()]);
+  const summary = summarize(points);
+  const context = [
+    runContext(summary),
+    greeting
+      ? `GREETING DIRECTIVE: open your first reply of a new conversation with: "${greeting}"`
+      : null,
+  ]
+    .filter((line): line is string => line !== null)
+    .join("\n");
   const quality = dataQuality(summary);
-  const apiKey = process.env.OPENAI_API_KEY;
+  const openAiKey = process.env.OPENAI_API_KEY;
+  const gatewayKey = process.env.AI_GATEWAY_API_KEY;
+  const apiKey = openAiKey ?? gatewayKey;
+  const baseUrl =
+    process.env.AI_BASE_URL ??
+    (openAiKey
+      ? "https://api.openai.com/v1"
+      : "https://ai-gateway.vercel.sh/v1");
+  const model = process.env.COACH_MODEL ?? process.env.AI_MODEL ?? "gpt-4o-mini";
 
   if (!apiKey) {
     return NextResponse.json({
@@ -65,7 +81,7 @@ export async function POST(request: Request) {
   }
 
   try {
-    const reply = await askModel(apiKey, context, history);
+    const reply = await askModel(apiKey, context, history, { baseUrl, model });
     return NextResponse.json({
       reply,
       source: "model",
