@@ -1,0 +1,62 @@
+[
+  {
+    "hash": "e774603",
+    "isoDate": "2026-08-29T12:47:43+00:00",
+    "subject": "Add README with setup confirmation"
+  },
+  {
+    "hash": "821d54a",
+    "isoDate": "2026-08-29T13:15:24+00:00",
+    "subject": "Scaffold Pacer Next.js app with TypeScript and homepage tagline"
+  },
+  {
+    "hash": "5aa61cd",
+    "isoDate": "2026-08-29T13:29:48+00:00",
+    "subject": "Add run data point ingestion and run summary API endpoints"
+  },
+  {
+    "hash": "4830734",
+    "isoDate": "2026-08-29T14:02:12+00:00",
+    "subject": "Add Coach chat page backed by today's real run data"
+  },
+  {
+    "hash": "f9eeaec",
+    "isoDate": "2026-08-29T14:08:53+00:00",
+    "subject": "Sharpen coach voice and add three starter questions"
+  },
+  {
+    "hash": "53b630d",
+    "isoDate": "2026-08-29T14:34:45+00:00",
+    "subject": "Handle thin or missing run data honestly in the coach"
+  },
+  {
+    "hash": "3000c60",
+    "isoDate": "2026-08-29T14:42:10+00:00",
+    "subject": "Speak coach replies aloud with ElevenLabs and add per-message speaker buttons"
+  },
+  {
+    "hash": "e16202c",
+    "isoDate": "2026-08-29T14:55:41+00:00",
+    "subject": "Speak running notation as natural words before sending text to ElevenLabs"
+  },
+  {
+    "hash": "fba147f",
+    "isoDate": "2026-08-29T14:58:36+00:00",
+    "subject": "Make coach speech playback cancel-safe and free audio URLs on cleanup"
+  },
+  {
+    "hash": "fdb468a",
+    "isoDate": "2026-08-29T15:03:54+00:00",
+    "subject": "Add microphone dictation to the coach chat for a full voice loop"
+  },
+  {
+    "hash": "c42726a",
+    "isoDate": "2026-08-29T15:08:19+00:00",
+    "subject": "Add dark landing page with three sections and email signup capture"
+  },
+  {
+    "hash": "608e0fe",
+    "isoDate": "2026-08-29T15:21:23+00:00",
+    "subject": "Add Live big-screen run board with route, pace, laps and 10s refresh"
+  }
+]

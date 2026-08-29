@@ -27,6 +27,12 @@ export default function Home() {
         </span>
         <nav className="flex items-center gap-3">
           <a
+            href="/build-map"
+            className="rounded-full border border-white/20 px-4 py-2 text-sm font-medium hover:border-[#c6ff00] hover:text-[#c6ff00]"
+          >
+            Build map
+          </a>
+          <a
             href="/live"
             className="rounded-full border border-white/20 px-4 py-2 text-sm font-medium hover:border-[#c6ff00] hover:text-[#c6ff00]"
           >

@@ -48,6 +48,12 @@ With no points, a single point, or points that cover no measurable distance or l
 
 `/live` is a big-screen board for today's run: the route drawn from the recorded coordinates, current pace, total distance, lap count, average pace and who is running now. It refreshes from `/api/run` every ten seconds.
 
+## Build map
+
+`/build-map` pins every commit onto a 400 m track. Each commit is matched to the run point closest in time, which gives the lap, the metres run and the teammate who was running; the pin card shows the commit message and time, and flags when the nearest run point is more than two minutes away. Commits that predate any run data are spread around the lap in order and marked as unpositioned.
+
+The git history is snapshotted into `data/commits.json`, because the git directory is not available at runtime. Refresh it with `npm run commits` after committing.
+
 ## Deployment
 
 Deployed on [Vercel](https://vercel.com).
