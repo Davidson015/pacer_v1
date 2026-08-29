@@ -7,6 +7,22 @@ export type RunPoint = {
   teamName: string;
 };
 
+export type Lap = {
+  lapNumber: number;
+  distanceMeters: number;
+  durationSeconds: number;
+  paceMinPerKm: number | null;
+  complete: boolean;
+};
+
+export type Section = {
+  fromIndex: number;
+  toIndex: number;
+  distanceMeters: number;
+  durationSeconds: number;
+  paceMinPerKm: number;
+};
+
 export type RunSummary = {
   points: RunPoint[];
   pointCount: number;
@@ -16,6 +32,9 @@ export type RunSummary = {
   averagePaceMinPerKm: number | null;
   lapCount: number;
   elapsedSeconds: number;
+  laps: Lap[];
+  fastestSection: Section | null;
+  slowestSection: Section | null;
 };
 
 export const TRACK_LAP_METERS = 400;
@@ -87,6 +106,82 @@ export function distanceMeters(a: RunPoint, b: RunPoint): number {
   return 2 * EARTH_RADIUS_METERS * Math.asin(Math.min(1, Math.sqrt(h)));
 }
 
+function paceMinPerKm(distanceMeters: number, durationSeconds: number) {
+  return durationSeconds / 60 / (distanceMeters / 1000);
+}
+
+export function computeLaps(run: RunPoint[]): Lap[] {
+  const laps: Lap[] = [];
+  let lapDistance = 0;
+  let lapDuration = 0;
+
+  for (let i = 1; i < run.length; i++) {
+    let segmentDistance = distanceMeters(run[i - 1], run[i]);
+    let segmentDuration = Math.max(
+      0,
+      (Date.parse(run[i].timestamp) - Date.parse(run[i - 1].timestamp)) / 1000,
+    );
+
+    // Split the segment whenever it crosses a lap boundary, prorating its duration.
+    while (lapDistance + segmentDistance >= TRACK_LAP_METERS) {
+      const needed = TRACK_LAP_METERS - lapDistance;
+      const share = segmentDistance > 0 ? needed / segmentDistance : 0;
+      const usedDuration = segmentDuration * share;
+      laps.push({
+        lapNumber: laps.length + 1,
+        distanceMeters: TRACK_LAP_METERS,
+        durationSeconds: lapDuration + usedDuration,
+        paceMinPerKm:
+          lapDuration + usedDuration > 0
+            ? paceMinPerKm(TRACK_LAP_METERS, lapDuration + usedDuration)
+            : null,
+        complete: true,
+      });
+      segmentDistance -= needed;
+      segmentDuration -= usedDuration;
+      lapDistance = 0;
+      lapDuration = 0;
+    }
+
+    lapDistance += segmentDistance;
+    lapDuration += segmentDuration;
+  }
+
+  if (lapDistance > 0) {
+    laps.push({
+      lapNumber: laps.length + 1,
+      distanceMeters: lapDistance,
+      durationSeconds: lapDuration,
+      paceMinPerKm:
+        lapDuration > 0 ? paceMinPerKm(lapDistance, lapDuration) : null,
+      complete: false,
+    });
+  }
+
+  return laps;
+}
+
+function computeSections(run: RunPoint[]): Section[] {
+  const sections: Section[] = [];
+  for (let i = 1; i < run.length; i++) {
+    const distance = distanceMeters(run[i - 1], run[i]);
+    const duration = Math.max(
+      0,
+      (Date.parse(run[i].timestamp) - Date.parse(run[i - 1].timestamp)) / 1000,
+    );
+    if (distance > 0 && duration > 0) {
+      sections.push({
+        fromIndex: i - 1,
+        toIndex: i,
+        distanceMeters: distance,
+        durationSeconds: duration,
+        paceMinPerKm: paceMinPerKm(distance, duration),
+      });
+    }
+  }
+  return sections;
+}
+
 export function summarize(run: RunPoint[]): RunSummary {
   let totalDistanceMeters = 0;
   for (let i = 1; i < run.length; i++) {
@@ -110,6 +205,11 @@ export function summarize(run: RunPoint[]): RunSummary {
         ? run.reduce((sum, point) => sum + point.pace, 0) / run.length
         : null;
 
+  const sections = computeSections(run);
+  const sortedByPace = [...sections].sort(
+    (a, b) => a.paceMinPerKm - b.paceMinPerKm,
+  );
+
   return {
     points: run,
     pointCount: run.length,
@@ -119,5 +219,8 @@ export function summarize(run: RunPoint[]): RunSummary {
     averagePaceMinPerKm,
     lapCount: totalDistanceMeters / TRACK_LAP_METERS,
     elapsedSeconds,
+    laps: computeLaps(run),
+    fastestSection: sortedByPace[0] ?? null,
+    slowestSection: sortedByPace[sortedByPace.length - 1] ?? null,
   };
 }
