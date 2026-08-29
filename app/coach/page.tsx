@@ -15,6 +15,7 @@ export default function CoachPage() {
   const [input, setInput] = useState("");
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [thin, setThin] = useState(false);
 
   async function ask(question: string) {
     if (question === "" || pending) return;
@@ -34,10 +35,15 @@ export default function CoachPage() {
         headers: { "content-type": "application/json" },
         body: JSON.stringify({ messages: history }),
       });
-      const data = (await response.json()) as { reply?: string; error?: string };
+      const data = (await response.json()) as {
+        reply?: string;
+        error?: string;
+        dataQuality?: string;
+      };
       if (!response.ok || !data.reply) {
         throw new Error(data.error ?? "the coach could not reply");
       }
+      setThin(data.dataQuality !== "rich");
       setMessages((current) => [
         ...current,
         { role: "assistant", content: data.reply as string },
@@ -83,6 +89,13 @@ export default function CoachPage() {
         )}
         {error && <div className="text-sm text-red-600">{error}</div>}
       </div>
+
+      {thin && (
+        <p className="text-sm text-amber-700 dark:text-amber-500">
+          Not enough run data for lap analysis yet — the coach will only quote
+          what has actually been recorded.
+        </p>
+      )}
 
       <div className="flex flex-wrap gap-2">
         {STARTER_QUESTIONS.map((question) => (

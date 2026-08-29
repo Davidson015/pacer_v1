@@ -25,7 +25,7 @@ Open [http://localhost:3000](http://localhost:3000).
 - `POST /api/points` — append a run data point: `latitude`, `longitude`, `timestamp` (date string), `pace`, `runnerName`, `teamName`.
 - `GET /api/points` — the stored points, in the order received.
 - `GET /api/run` — the run so far: `totalDistanceMeters` (haversine), `averagePaceMinPerKm`, `lapCount` (400 m track), `elapsedSeconds`, per-lap splits, fastest and slowest sections.
-- `POST /api/coach` — `{ messages: [{ role, content }] }`; replies as the coach using today's run data as context.
+- `POST /api/coach` — `{ messages: [{ role, content }] }`; replies as the coach using today's run data as context, plus a `dataQuality` of `none`, `single`, `thin` or `rich`.
 
 Storage is in-process and resets when the server restarts (and is per-instance on serverless).
 
@@ -34,6 +34,8 @@ Storage is in-process and resets when the server restarts (and is per-instance o
 `/coach` is a chat interface. Each reply reloads today's run and passes distance, average pace, per-lap paces and fastest/slowest sections to the model.
 
 Set `OPENAI_API_KEY` (optionally `COACH_MODEL`, default `gpt-4o-mini`) to enable the AI coach. Without a key the endpoint returns a deterministic reply built from the same real numbers.
+
+With no points, a single point, or points that cover no measurable distance or less than one 400 m lap, the context marks the data as thin: the coach says so, quotes only what was recorded, skips lap and section analysis, and asks for more points. The page shows the same warning.
 
 ## Deployment
 

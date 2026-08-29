@@ -6,7 +6,8 @@ export const COACH_SYSTEM_PROMPT = [
   "Every reply must quote at least two exact numbers from the run context below — lap paces, section paces, distance, elapsed time — and name the lap or section they came from.",
   "Sound like you watched it happen: react to what the splits show (a lap that dropped off, a surge, an even rhythm), then give one instruction tied to those numbers.",
   "Banned: generic advice ('stay hydrated', 'listen to your body', 'keep it up'), hedging, filler openers, emoji, bullet lists, and any number not present in the context.",
-  "If the context has no data points, say the run has not started and ask for the first data point. Never guess.",
+  "Data honesty overrides everything: use only numbers written in the context, never extrapolate, project, or fill a gap.",
+  "When the context says data is thin or missing, say so plainly in one line, quote whatever real numbers exist (possibly none), ask for more data points, and give no lap or section analysis.",
 ].join(" ");
 
 export const STARTER_QUESTIONS = [
@@ -23,44 +24,106 @@ export function formatPace(minPerKm: number | null): string {
   return `${carry ? minutes + 1 : minutes}:${String(carry ? 0 : seconds).padStart(2, "0")}/km`;
 }
 
+export type DataQuality = "none" | "single" | "thin" | "rich";
+
+/** How much of today's run can actually be described without guessing. */
+export function dataQuality(summary: RunSummary): DataQuality {
+  if (summary.pointCount === 0) return "none";
+  if (summary.pointCount === 1) return "single";
+  const measurable =
+    summary.totalDistanceMeters > 0 && summary.elapsedSeconds > 0;
+  if (!measurable) return "thin";
+  return summary.laps.some((lap) => lap.complete) ? "rich" : "thin";
+}
+
+function reportedPace(summary: RunSummary): string {
+  const paces = summary.points.map((point) => point.pace);
+  const mean = paces.reduce((sum, pace) => sum + pace, 0) / paces.length;
+  return `${mean.toFixed(2)} min/km`;
+}
+
 export function runContext(summary: RunSummary): string {
-  if (summary.pointCount === 0) {
-    return "Today's run: no data points recorded yet.";
+  const quality = dataQuality(summary);
+
+  if (quality === "none") {
+    return "Today's run: no data points recorded yet. DATA STATUS: nothing to analyse — no distance, pace, laps or sections exist.";
   }
+
+  const who = `Runner: ${summary.runnerName ?? "unknown"} (team ${summary.teamName ?? "unknown"})`;
+
+  if (quality === "single") {
+    return [
+      "Today's run so far:",
+      who,
+      `Data points: 1 (recorded ${summary.points[0].timestamp})`,
+      `Device-reported pace at that point: ${reportedPace(summary)}`,
+      "DATA STATUS: thin — one point only, so distance, average pace, laps and sections cannot be measured yet. Do not estimate them.",
+    ].join("\n");
+  }
+
+  const measurable =
+    summary.totalDistanceMeters > 0 && summary.elapsedSeconds > 0;
 
   const lines = [
-    `Runner: ${summary.runnerName ?? "unknown"} (team ${summary.teamName ?? "unknown"})`,
+    who,
+    `Data points: ${summary.pointCount}`,
     `Total distance: ${(summary.totalDistanceMeters / 1000).toFixed(2)} km`,
     `Elapsed: ${Math.round(summary.elapsedSeconds / 60)} min`,
-    `Average pace: ${formatPace(summary.averagePaceMinPerKm)}`,
+    measurable
+      ? `Average pace: ${formatPace(summary.averagePaceMinPerKm)}`
+      : `Average pace: not measurable yet; device-reported pace averages ${reportedPace(summary)}`,
     `Laps (400 m): ${summary.lapCount.toFixed(2)}`,
-    ...summary.laps.map(
-      (lap) =>
-        `Lap ${lap.lapNumber}: ${formatPace(lap.paceMinPerKm)}${lap.complete ? "" : ` (partial, ${Math.round(lap.distanceMeters)} m)`}`,
-    ),
   ];
 
-  if (summary.fastestSection) {
+  if (measurable) {
     lines.push(
-      `Fastest section: points ${summary.fastestSection.fromIndex}-${summary.fastestSection.toIndex} at ${formatPace(summary.fastestSection.paceMinPerKm)}`,
+      ...summary.laps.map(
+        (lap) =>
+          `Lap ${lap.lapNumber}: ${formatPace(lap.paceMinPerKm)}${lap.complete ? "" : ` (partial, ${Math.round(lap.distanceMeters)} m)`}`,
+      ),
     );
+    if (summary.fastestSection) {
+      lines.push(
+        `Fastest section: points ${summary.fastestSection.fromIndex}-${summary.fastestSection.toIndex} at ${formatPace(summary.fastestSection.paceMinPerKm)}`,
+      );
+    }
+    if (summary.slowestSection) {
+      lines.push(
+        `Slowest section: points ${summary.slowestSection.fromIndex}-${summary.slowestSection.toIndex} at ${formatPace(summary.slowestSection.paceMinPerKm)}`,
+      );
+    }
   }
-  if (summary.slowestSection) {
-    lines.push(
-      `Slowest section: points ${summary.slowestSection.fromIndex}-${summary.slowestSection.toIndex} at ${formatPace(summary.slowestSection.paceMinPerKm)}`,
-    );
-  }
+
+  lines.push(
+    quality === "rich"
+      ? "DATA STATUS: full — lap and section analysis is valid."
+      : "DATA STATUS: thin — no complete 400 m lap yet, so there are no lap splits to compare. Quote only the numbers above.",
+  );
 
   return `Today's run so far:\n${lines.join("\n")}`;
 }
 
 /** Deterministic reply used when no AI provider key is configured. */
 export function fallbackReply(summary: RunSummary): string {
-  if (summary.pointCount === 0) {
+  const quality = dataQuality(summary);
+  const name = summary.runnerName ? `${summary.runnerName}, ` : "";
+
+  if (quality === "none") {
     return "Run hasn't started — no data points yet. Send me the first one and I'll call the splits as they land.";
   }
 
-  const name = summary.runnerName ? `${summary.runnerName}, ` : "";
+  if (quality === "single") {
+    return `${name}one data point in, nothing to measure yet — no distance, no laps. Keep them coming and I'll call your splits.`;
+  }
+
+  if (quality === "thin") {
+    const measured =
+      summary.totalDistanceMeters > 0
+        ? `${Math.round(summary.totalDistanceMeters)} m over ${Math.round(summary.elapsedSeconds)} s`
+        : "no measurable distance yet";
+    return `${name}data's thin: ${summary.pointCount} points, ${measured}. Not a full 400 m lap, so I'm not calling splits yet. Send more points.`;
+  }
+
   const lines = [
     `${name}${(summary.totalDistanceMeters / 1000).toFixed(2)} km, ${summary.lapCount.toFixed(1)} laps, ${formatPace(summary.averagePaceMinPerKm)} average.`,
   ];

@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import {
   askModel,
+  dataQuality,
   fallbackReply,
   runContext,
   type ChatMessage,
@@ -48,23 +49,31 @@ export async function POST(request: Request) {
   // Today's real run data is loaded fresh on every reply.
   const summary = summarize(getPoints());
   const context = runContext(summary);
+  const quality = dataQuality(summary);
   const apiKey = process.env.OPENAI_API_KEY;
 
   if (!apiKey) {
     return NextResponse.json({
       reply: fallbackReply(summary),
       source: "fallback",
+      dataQuality: quality,
       context,
     });
   }
 
   try {
     const reply = await askModel(apiKey, context, history);
-    return NextResponse.json({ reply, source: "model", context });
+    return NextResponse.json({
+      reply,
+      source: "model",
+      dataQuality: quality,
+      context,
+    });
   } catch {
     return NextResponse.json({
       reply: fallbackReply(summary),
       source: "fallback",
+      dataQuality: quality,
       context,
     });
   }
