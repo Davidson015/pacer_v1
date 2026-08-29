@@ -39,6 +39,18 @@ export default function Home() {
             Live run
           </a>
           <a
+            href="/leaderboard"
+            className="rounded-full border border-white/20 px-4 py-2 text-sm font-medium hover:border-[#c6ff00] hover:text-[#c6ff00]"
+          >
+            Leaderboard
+          </a>
+          <a
+            href="/track"
+            className="rounded-full border border-white/20 px-4 py-2 text-sm font-medium hover:border-[#c6ff00] hover:text-[#c6ff00]"
+          >
+            Track
+          </a>
+          <a
             href="/coach"
             className="rounded-full border border-white/20 px-4 py-2 text-sm font-medium hover:border-[#c6ff00] hover:text-[#c6ff00]"
           >

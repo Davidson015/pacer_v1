@@ -27,6 +27,8 @@ Open [http://localhost:3000](http://localhost:3000).
 - `GET /api/run` — the run so far: `totalDistanceMeters` (haversine), `averagePaceMinPerKm`, `lapCount` (400 m track), `elapsedSeconds`, per-lap splits, fastest and slowest sections.
 - `POST /api/coach` — `{ messages: [{ role, content }] }`; replies as the coach using today's run data as context, plus a `dataQuality` of `none`, `single`, `thin` or `rich`.
 - `POST /api/signups` — `{ email }`; stores a landing-page signup (deduped, lowercased). `GET /api/signups` returns the count only.
+- `POST /api/runners` — `{ runnerName, teamName }`; registers a runner/team pair for the leaderboard (deduped). `GET /api/runners` returns all registered runners and the count.
+- `GET /api/leaderboard` — builds the ranked runner table from registered runners and their run points, including deterministic data-honest coach comments.
 - `GET /api/speak` — `{ available }`, whether text to speech is configured.
 - `POST /api/speak` — `{ text }`; returns `audio/mpeg` spoken by ElevenLabs (the API key never leaves the server). Running shorthand is expanded for speech only — `5:12/km` becomes "five minutes twelve seconds per kilometre", `km 3` becomes "kilometre three" — so on-screen text stays compact.
 
@@ -49,7 +51,15 @@ With no points, a single point, or points that cover no measurable distance or l
 
 ## Live
 
-`/live` is a big-screen board for today's run: the route drawn from the recorded coordinates, current pace, total distance, lap count, average pace and who is running now. It refreshes from `/api/run` every ten seconds.
+`/live` is a big-screen board for today's run: the route drawn from the recorded coordinates, current pace, total distance, lap count, average pace, who is running now, today's signup count and registered runner count. It refreshes from `/api/run`, `/api/signups` and `/api/leaderboard` every ten seconds.
+
+## Track
+
+`/track` registers a runner and team, remembers them in the browser, and uses a high-accuracy geolocation watch to send an honest GPS point at most every ten seconds. Pace comes from the device speed or the distance and time between accepted fixes; points are skipped when neither is available.
+
+## Leaderboard
+
+`/leaderboard` ranks registered runners and any point contributors by total distance, with average pace, laps and a deterministic comment based on data quality. It includes a scannable QR code whose URL is the current host's `/track` page. Values that cannot be measured yet are shown as `—`.
 
 ## Build map
 

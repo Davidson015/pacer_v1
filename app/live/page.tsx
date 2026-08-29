@@ -90,23 +90,43 @@ function Stat({
 
 export default function LivePage() {
   const [run, setRun] = useState<RunSummary | null>(null);
+  const [signupCount, setSignupCount] = useState<number | null>(null);
+  const [runnerCount, setRunnerCount] = useState<number | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [updatedAt, setUpdatedAt] = useState<string | null>(null);
 
-  const load = useCallback(() => {
-    fetch("/api/run", { cache: "no-store" })
-      .then((response) => {
-        if (!response.ok) throw new Error("could not load the run");
-        return response.json() as Promise<RunSummary>;
-      })
-      .then((summary) => {
-        setRun(summary);
-        setError(null);
-        setUpdatedAt(new Date().toLocaleTimeString());
-      })
-      .catch((caught: unknown) => {
-        setError(caught instanceof Error ? caught.message : "unexpected error");
-      });
+  const load = useCallback(async () => {
+    try {
+      const [runResponse, signupResponse, leaderboardResponse] =
+        await Promise.all([
+          fetch("/api/run", { cache: "no-store" }),
+          fetch("/api/signups", { cache: "no-store" }),
+          fetch("/api/leaderboard", { cache: "no-store" }),
+        ]);
+      if (!runResponse.ok) throw new Error("could not load the run");
+      if (!signupResponse.ok || !leaderboardResponse.ok) {
+        throw new Error("could not load today's counts");
+      }
+
+      const [summary, signups, leaderboard] = await Promise.all([
+        runResponse.json() as Promise<RunSummary>,
+        signupResponse.json() as Promise<{ signupCount?: number }>,
+        leaderboardResponse.json() as Promise<{ runnerCount?: number }>,
+      ]);
+      setRun(summary);
+      setSignupCount(
+        typeof signups.signupCount === "number" ? signups.signupCount : null,
+      );
+      setRunnerCount(
+        typeof leaderboard.runnerCount === "number"
+          ? leaderboard.runnerCount
+          : null,
+      );
+      setError(null);
+      setUpdatedAt(new Date().toLocaleTimeString());
+    } catch (caught: unknown) {
+      setError(caught instanceof Error ? caught.message : "unexpected error");
+    }
   }, []);
 
   useEffect(() => {
@@ -184,6 +204,14 @@ export default function LivePage() {
             label="Avg pace"
             value={run ? paceLabel(run.averagePaceMinPerKm) : "—"}
             unit="/km"
+          />
+          <Stat
+            label="Signups"
+            value={signupCount === null ? "—" : signupCount.toString()}
+          />
+          <Stat
+            label="Runners"
+            value={runnerCount === null ? "—" : runnerCount.toString()}
           />
           <div className="sm:col-span-2">
             <span className="text-sm font-semibold tracking-[0.2em] text-white/40 uppercase sm:text-base">
