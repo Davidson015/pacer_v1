@@ -58,5 +58,10 @@
     "hash": "608e0fe",
     "isoDate": "2026-08-29T15:21:23+00:00",
     "subject": "Add Live big-screen run board with route, pace, laps and 10s refresh"
+  },
+  {
+    "hash": "ed23c34",
+    "isoDate": "2026-08-29T15:33:46+00:00",
+    "subject": "Add Build Map pinning every commit onto the lap it shipped on"
   }
 ]
