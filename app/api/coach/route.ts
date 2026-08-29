@@ -66,10 +66,14 @@ export async function POST(request: Request) {
   const apiKey = openAiKey ?? gatewayKey;
   const baseUrl =
     process.env.AI_BASE_URL ??
-    (openAiKey
+    (apiKey?.startsWith("sk-")
       ? "https://api.openai.com/v1"
       : "https://ai-gateway.vercel.sh/v1");
-  const model = process.env.COACH_MODEL ?? process.env.AI_MODEL ?? "gpt-4o-mini";
+  const configuredModel =
+    process.env.COACH_MODEL ?? process.env.AI_MODEL ?? "gpt-4o-mini";
+  const model = /api\.openai\.com\/v1/i.test(baseUrl)
+    ? configuredModel.replace(/^[^/]+\//, "")
+    : configuredModel;
 
   if (!apiKey) {
     return NextResponse.json({

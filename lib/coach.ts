@@ -207,7 +207,7 @@ export async function askModel(
     messages,
     ...(isGpt4oFamily
       ? { temperature: 0.7, max_tokens: 200 }
-      : { max_completion_tokens: 200 }),
+      : { max_completion_tokens: 600 }),
   };
   const request = (body: Record<string, unknown>) =>
     fetch(endpoint, {
@@ -242,7 +242,10 @@ export async function askModel(
   }
 
   const data = (await response.json()) as {
-    choices?: Array<{ message?: { content?: string } }>;
+    choices?: Array<{
+      message?: { content?: string };
+      finish_reason?: string | null;
+    }>;
   };
   const reply = data.choices?.[0]?.message?.content?.trim();
   if (!reply) {
