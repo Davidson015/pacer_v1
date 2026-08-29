@@ -51,17 +51,21 @@ function SummaryStat({
   label,
   value,
   unit,
+  compact,
 }: {
   label: string;
   value: string;
   unit?: string;
+  compact?: boolean;
 }) {
   return (
     <div className="flex min-w-0 flex-col gap-2">
       <span className="text-xs font-semibold tracking-[0.2em] text-white/45 uppercase sm:text-sm">
         {label}
       </span>
-      <span className="text-3xl leading-none font-black tracking-tight text-white tabular-nums sm:text-4xl lg:text-5xl">
+      <span
+        className={`leading-none font-black tracking-tight text-white tabular-nums ${compact ? "text-2xl sm:text-3xl lg:text-4xl" : "text-3xl sm:text-4xl lg:text-5xl"}`}
+      >
         {value}
         {unit && (
           <span className="ml-2 text-base font-bold text-[#c6ff00] sm:text-lg">
@@ -161,7 +165,11 @@ export default function BuildMapPage() {
           />
           <SummaryStat label="Commits" value={COMMITS.length.toString()} />
           <SummaryStat label="Runners" value={runnerCount} />
-          <SummaryStat label="Time range" value={timeRange(COMMITS, points)} />
+          <SummaryStat
+            label="Time range"
+            value={timeRange(COMMITS, points)}
+            compact
+          />
         </section>
         <p className="text-xs text-white/35">
           Commit timestamps and GPS timestamps are separate records,

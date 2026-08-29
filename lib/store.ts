@@ -1,3 +1,4 @@
+import { createHash } from "node:crypto";
 import { BlobNotFoundError, head, list, put } from "@vercel/blob";
 import { parsePoint, type RunPoint } from "@/lib/run";
 import { normalizeEmail, type Signup } from "@/lib/signups";
@@ -83,7 +84,9 @@ export async function saveSignup(email: string): Promise<boolean> {
     return true;
   }
 
-  const pathname = `signups/${encodeURIComponent(email)}.json`;
+  // Blob URLs are public, so the address is a digest rather than the email itself.
+  const digest = createHash("sha256").update(email).digest("hex");
+  const pathname = `signups/${digest}.json`;
   try {
     await head(pathname);
     return false;
