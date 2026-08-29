@@ -154,5 +154,47 @@
     "isoDate": "2026-08-29T16:16:03+00:00",
     "subject": "Keep the first GPS fix as the pace baseline while tracking",
     "body": ""
+  },
+  {
+    "hash": "9aa5d85",
+    "isoDate": "2026-08-29T16:16:03+00:00",
+    "subject": "Refresh build map commit snapshot",
+    "body": ""
+  },
+  {
+    "hash": "3aad0fd",
+    "isoDate": "2026-08-29T16:41:12+00:00",
+    "subject": "Route coach requests through the AI Gateway",
+    "body": ""
+  },
+  {
+    "hash": "8919e80",
+    "isoDate": "2026-08-29T16:41:34+00:00",
+    "subject": "Add live admin greeting for the coach",
+    "body": ""
+  },
+  {
+    "hash": "fb54b5f",
+    "isoDate": "2026-08-29T16:43:26+00:00",
+    "subject": "Make the Pacer pages work on mobile",
+    "body": ""
+  },
+  {
+    "hash": "3d7cc42",
+    "isoDate": "2026-08-29T16:43:32+00:00",
+    "subject": "Suppress expected root hydration differences",
+    "body": ""
+  },
+  {
+    "hash": "b72bfb5",
+    "isoDate": "2026-08-29T17:04:20+00:00",
+    "subject": "Make Blob runner and greeting writes durable",
+    "body": ""
+  },
+  {
+    "hash": "9621ee8",
+    "isoDate": "2026-08-29T17:04:24+00:00",
+    "subject": "Scope the live dashboard to the latest runner",
+    "body": ""
   }
 ]
