@@ -1,5 +1,5 @@
 import { createHash } from "node:crypto";
-import { BlobNotFoundError, head, list, put } from "@vercel/blob";
+import { BlobNotFoundError, del, head, list, put } from "@vercel/blob";
 import { parsePoint, type RunPoint } from "@/lib/run";
 import { normalizeEmail, type Signup } from "@/lib/signups";
 
@@ -121,6 +121,7 @@ export async function saveSignup(email: string): Promise<boolean> {
     {
       access: "public",
       addRandomSuffix: false,
+      allowOverwrite: true,
       contentType: "application/json",
     },
   );
@@ -192,6 +193,7 @@ export async function saveRunner(
   await put(`runners/${digest}.json`, JSON.stringify(runner), {
     access: "public",
     addRandomSuffix: false,
+    allowOverwrite: true,
     contentType: "application/json",
   });
 }
@@ -242,15 +244,23 @@ export async function saveGreeting(greeting: string): Promise<string> {
 
   if (!hasBlobStorage()) return updatedAt;
 
-  await put(
-    "config/greeting.json",
-    JSON.stringify({ greeting, updatedAt }),
-    {
-      access: "public",
-      addRandomSuffix: false,
-      contentType: "application/json",
-    },
-  );
+  const pathname = `config/greeting-${Date.now()}-${crypto.randomUUID()}.json`;
+  await put(pathname, JSON.stringify({ greeting, updatedAt }), {
+    access: "public",
+    addRandomSuffix: false,
+    contentType: "application/json",
+  });
+
+  try {
+    const { blobs } = await list({ prefix: "config/greeting-" });
+    const superseded = blobs
+      .filter((blob) => blob.pathname !== pathname)
+      .map((blob) => blob.pathname);
+    if (superseded.length > 0) await del(superseded);
+  } catch {
+    // Cleanup is best effort after the new greeting is safely stored.
+  }
+
   return updatedAt;
 }
 
@@ -258,17 +268,53 @@ export async function getGreeting(): Promise<string | null> {
   if (!hasBlobStorage()) return fallbackGreeting?.greeting ?? null;
 
   try {
-    const { blobs } = await list({ prefix: "config/greeting.json" });
-    const blob = blobs.find((item) => item.pathname === "config/greeting.json");
-    if (!blob) return null;
-    const response = await fetch(blob.url, { cache: "no-store" });
-    if (!response.ok) return null;
-    const value: unknown = await response.json();
-    if (typeof value !== "object" || value === null) return null;
-    const raw = value as Record<string, unknown>;
-    return typeof raw.greeting === "string" && raw.greeting.trim() !== ""
-      ? raw.greeting
-      : null;
+    const { blobs } = await list({ prefix: "config/greeting-" });
+    const greetings = await Promise.all(
+      blobs.map(async (blob) => {
+        try {
+          const response = await fetch(blob.url, { cache: "no-store" });
+          if (!response.ok) return null;
+          const value: unknown = await response.json();
+          if (typeof value !== "object" || value === null) return null;
+          const raw = value as Record<string, unknown>;
+          if (typeof raw.greeting !== "string" || raw.greeting.trim() === "") {
+            return null;
+          }
+          const uploadedAt =
+            blob.uploadedAt instanceof Date &&
+            !Number.isNaN(blob.uploadedAt.getTime())
+              ? blob.uploadedAt.getTime()
+              : null;
+          return {
+            greeting: raw.greeting,
+            pathname: blob.pathname,
+            uploadedAt,
+          };
+        } catch {
+          return null;
+        }
+      }),
+    );
+
+    const validGreetings = greetings.filter(
+      (
+        entry,
+      ): entry is {
+        greeting: string;
+        pathname: string;
+        uploadedAt: number | null;
+      } => entry !== null,
+    );
+    validGreetings.sort((a, b) => {
+      if (a.uploadedAt !== null && b.uploadedAt !== null) {
+        return b.uploadedAt - a.uploadedAt;
+      }
+      if (a.uploadedAt !== null) return -1;
+      if (b.uploadedAt !== null) return 1;
+      return b.pathname.localeCompare(a.pathname);
+    });
+
+    return validGreetings[0]?.greeting ?? null;
   } catch {
     return null;
   }
