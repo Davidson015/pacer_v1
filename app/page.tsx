@@ -25,12 +25,20 @@ export default function Home() {
         <span className="text-lg font-bold tracking-tight">
           Pacer<span className="text-[#c6ff00]">.</span>
         </span>
-        <a
-          href="/coach"
-          className="rounded-full border border-white/20 px-4 py-2 text-sm font-medium hover:border-[#c6ff00] hover:text-[#c6ff00]"
-        >
-          Open the coach
-        </a>
+        <nav className="flex items-center gap-3">
+          <a
+            href="/live"
+            className="rounded-full border border-white/20 px-4 py-2 text-sm font-medium hover:border-[#c6ff00] hover:text-[#c6ff00]"
+          >
+            Live run
+          </a>
+          <a
+            href="/coach"
+            className="rounded-full border border-white/20 px-4 py-2 text-sm font-medium hover:border-[#c6ff00] hover:text-[#c6ff00]"
+          >
+            Open the coach
+          </a>
+        </nav>
       </header>
 
       <main className="mx-auto flex w-full max-w-6xl flex-1 flex-col gap-24 px-6 pb-24">

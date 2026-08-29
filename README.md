@@ -44,6 +44,10 @@ Every coach reply is spoken aloud with ElevenLabs, and a speaker button replays 
 
 With no points, a single point, or points that cover no measurable distance or less than one 400 m lap, the context marks the data as thin: the coach says so, quotes only what was recorded, skips lap and section analysis, and asks for more points. The page shows the same warning.
 
+## Live
+
+`/live` is a big-screen board for today's run: the route drawn from the recorded coordinates, current pace, total distance, lap count, average pace and who is running now. It refreshes from `/api/run` every ten seconds.
+
 ## Deployment
 
 Deployed on [Vercel](https://vercel.com).
