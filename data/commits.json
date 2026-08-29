@@ -106,5 +106,11 @@
     "isoDate": "2026-08-29T16:00:27+00:00",
     "subject": "Show full commit details on the Build Map",
     "body": ""
+  },
+  {
+    "hash": "db6be59",
+    "isoDate": "2026-08-29T16:01:13+00:00",
+    "subject": "Drop commit trailers from build map detail bodies",
+    "body": ""
   }
 ]
