@@ -130,9 +130,12 @@ export default function LivePage() {
   }, []);
 
   useEffect(() => {
-    load();
+    const initial = window.setTimeout(() => void load(), 0);
     const timer = setInterval(load, REFRESH_MS);
-    return () => clearInterval(timer);
+    return () => {
+      window.clearTimeout(initial);
+      clearInterval(timer);
+    };
   }, [load]);
 
   const last = run?.points[run.points.length - 1] ?? null;

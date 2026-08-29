@@ -168,9 +168,7 @@ export function fallbackReply(summary: RunSummary): string {
     lines.push(
       `Lap ${best.lapNumber} was your sharpest at ${formatPace(best.paceMinPerKm)}; lap ${worst.lapNumber} sagged to ${formatPace(worst.paceMinPerKm)}.`,
     );
-    lines.push(
-      `Next lap, hold ${formatPace(best.paceMinPerKm)} from the gun.`,
-    );
+    lines.push(`Next lap, hold ${formatPace(best.paceMinPerKm)} from the gun.`);
   } else if (summary.slowestSection && summary.fastestSection) {
     lines.push(
       `Quickest section ${formatPace(summary.fastestSection.paceMinPerKm)}, slowest ${formatPace(summary.slowestSection.paceMinPerKm)}.`,

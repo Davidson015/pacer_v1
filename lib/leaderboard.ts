@@ -29,7 +29,10 @@ export function buildLeaderboard(
   }
 
   const registered = new Map(
-    runners.map((runner) => [runnerKey(runner.runnerName, runner.teamName), runner]),
+    runners.map((runner) => [
+      runnerKey(runner.runnerName, runner.teamName),
+      runner,
+    ]),
   );
   const identities = new Map(registered);
   for (const point of points) {

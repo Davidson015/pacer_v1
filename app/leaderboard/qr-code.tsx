@@ -4,7 +4,8 @@ import QRCode from "qrcode";
 export default async function LeaderboardQrCode() {
   const requestHeaders = await headers();
   const forwardedHost = requestHeaders.get("x-forwarded-host");
-  const host = forwardedHost?.split(",")[0].trim() || requestHeaders.get("host");
+  const host =
+    forwardedHost?.split(",")[0].trim() || requestHeaders.get("host");
   const forwardedProtocol = requestHeaders.get("x-forwarded-proto");
   const protocol =
     forwardedProtocol?.split(",")[0].trim() ||

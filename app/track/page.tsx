@@ -44,7 +44,11 @@ function paceFromFix(
   if (!previous) return null;
   const elapsedSeconds = (position.timestamp - previous.timestampMs) / 1000;
   const distance = distanceMeters(previous, position.coords);
-  if (!Number.isFinite(elapsedSeconds) || elapsedSeconds <= 0 || distance <= 0) {
+  if (
+    !Number.isFinite(elapsedSeconds) ||
+    elapsedSeconds <= 0 ||
+    distance <= 0
+  ) {
     return null;
   }
   return elapsedSeconds / 60 / (distance / 1000);
@@ -86,8 +90,11 @@ export default function TrackPage() {
         typeof identity.runnerName === "string" &&
         typeof identity.teamName === "string"
       ) {
-        setRunnerName(identity.runnerName);
-        setTeamName(identity.teamName);
+        const timeout = window.setTimeout(() => {
+          setRunnerName(identity.runnerName as string);
+          setTeamName(identity.teamName as string);
+        }, 0);
+        return () => window.clearTimeout(timeout);
       }
     } catch {
       // A missing or malformed local preference should not block tracking.
@@ -191,7 +198,8 @@ export default function TrackPage() {
         })
           .then(async (response) => {
             const data = (await response.json()) as { error?: string };
-            if (!response.ok) throw new Error(data.error ?? "could not save point");
+            if (!response.ok)
+              throw new Error(data.error ?? "could not save point");
             lastAcceptedFixRef.current = {
               latitude: point.latitude,
               longitude: point.longitude,
@@ -222,8 +230,7 @@ export default function TrackPage() {
             Pacer track
           </p>
           <h1 className="mt-2 text-4xl leading-none font-black tracking-tight sm:text-6xl">
-            Put your run{" "}
-            <span className="text-[#c6ff00]">on the board.</span>
+            Put your run <span className="text-[#c6ff00]">on the board.</span>
           </h1>
         </div>
         <a
@@ -243,7 +250,10 @@ export default function TrackPage() {
             <h2 className="mt-3 text-3xl font-black tracking-tight sm:text-4xl">
               Who is running today?
             </h2>
-            <form onSubmit={registerRunner} className="mt-8 flex flex-col gap-4">
+            <form
+              onSubmit={registerRunner}
+              className="mt-8 flex flex-col gap-4"
+            >
               <label className="flex flex-col gap-2 text-sm font-semibold text-white/60">
                 Your name
                 <input
@@ -325,9 +335,7 @@ export default function TrackPage() {
             <p className="text-xs font-semibold tracking-[0.2em] text-white/40 uppercase">
               Last fix
             </p>
-            <p className="mt-2 text-2xl font-bold">
-              {lastFixTime ?? "—"}
-            </p>
+            <p className="mt-2 text-2xl font-bold">{lastFixTime ?? "—"}</p>
           </div>
           <div>
             <p className="text-xs font-semibold tracking-[0.2em] text-white/40 uppercase">
@@ -342,7 +350,9 @@ export default function TrackPage() {
         {(statusMessage || error) && (
           <p
             role="status"
-            className={error ? "text-base text-red-300" : "text-base text-[#c6ff00]"}
+            className={
+              error ? "text-base text-red-300" : "text-base text-[#c6ff00]"
+            }
           >
             {error ?? statusMessage}
           </p>

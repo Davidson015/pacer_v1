@@ -178,8 +178,7 @@ export async function saveRunner(
 
   if (!hasBlobStorage()) {
     const index = fallbackRunners.findIndex(
-      (item) =>
-        item.runnerName === runnerName && item.teamName === teamName,
+      (item) => item.runnerName === runnerName && item.teamName === teamName,
     );
     if (index === -1) fallbackRunners.push(runner);
     else fallbackRunners[index] = runner;

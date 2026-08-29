@@ -27,11 +27,7 @@ function lapsLabel(entry: LeaderboardEntry): string {
   return entry.pointCount === 0 ? "—" : entry.lapCount.toFixed(1);
 }
 
-export default function LeaderboardClient({
-  qrCode,
-}: {
-  qrCode?: ReactNode;
-}) {
+export default function LeaderboardClient({ qrCode }: { qrCode?: ReactNode }) {
   const [data, setData] = useState<LeaderboardResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -97,7 +93,8 @@ export default function LeaderboardClient({
                 Today&apos;s runners
               </p>
               <p className="mt-2 text-lg text-white/50">
-                {error ?? `${data?.runnerCount ?? "—"} registered · live every 10s`}
+                {error ??
+                  `${data?.runnerCount ?? "—"} registered · live every 10s`}
               </p>
             </div>
             {data?.updatedAt && (
