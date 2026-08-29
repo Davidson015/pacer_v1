@@ -1,4 +1,4 @@
-import type { RunSummary } from "./run";
+import type { Lap, RunSummary } from "./run";
 
 export const COACH_SYSTEM_PROMPT = [
   "You are Pacer: a warm, high-energy running coach who was trackside for every lap of today's run.",
@@ -34,6 +34,35 @@ export function dataQuality(summary: RunSummary): DataQuality {
     summary.totalDistanceMeters > 0 && summary.elapsedSeconds > 0;
   if (!measurable) return "thin";
   return summary.laps.some((lap) => lap.complete) ? "rich" : "thin";
+}
+
+export function leaderboardComment(summary: RunSummary): string {
+  const quality = dataQuality(summary);
+
+  if (quality === "none") {
+    return "No points yet — start tracking and I'll call your splits.";
+  }
+  if (quality === "single") {
+    return "One point in, nothing measurable yet — keep tracking and I'll call your splits.";
+  }
+  if (quality === "thin") {
+    return `${(summary.totalDistanceMeters / 1000).toFixed(2)} km in — no complete lap yet, so I'm holding the split call.`;
+  }
+
+  const laps = summary.laps.filter(
+    (lap) => lap.complete && lap.paceMinPerKm !== null,
+  );
+  const fastest = laps.reduce<Lap | null>(
+    (best, lap) =>
+      best === null ||
+      (lap.paceMinPerKm ?? Infinity) < (best.paceMinPerKm ?? Infinity)
+        ? lap
+        : best,
+    null,
+  );
+  return fastest
+    ? `Averaging ${formatPace(summary.averagePaceMinPerKm)}; lap ${fastest.lapNumber} was quickest at ${formatPace(fastest.paceMinPerKm)}.`
+    : `Averaging ${formatPace(summary.averagePaceMinPerKm)}; full splits are coming through.`;
 }
 
 function reportedPace(summary: RunSummary): string {
