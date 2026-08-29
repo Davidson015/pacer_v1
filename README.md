@@ -37,6 +37,8 @@ Storage is in-process and resets when the server restarts (and is per-instance o
 
 Set `OPENAI_API_KEY` (optionally `COACH_MODEL`, default `gpt-4o-mini`) to enable the AI coach. Without a key the endpoint returns a deterministic reply built from the same real numbers.
 
+The microphone button dictates a question with the browser's Web Speech API (Chrome, Edge, Safari) and sends it as soon as speech ends, so the loop is voice in, text plus voice out.
+
 Every coach reply is spoken aloud with ElevenLabs, and a speaker button replays any message. Set `ELEVENLABS_API_KEY` to enable it (optionally `ELEVENLABS_VOICE_ID` and `ELEVENLABS_MODEL_ID`, defaults Rachel / `eleven_turbo_v2_5`); without a key the buttons are disabled and the chat still works.
 
 With no points, a single point, or points that cover no measurable distance or less than one 400 m lap, the context marks the data as thin: the coach says so, quotes only what was recorded, skips lap and section analysis, and asks for more points. The page shows the same warning.

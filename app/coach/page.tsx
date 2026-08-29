@@ -23,6 +23,10 @@ export default function CoachPage() {
   const playbackIdRef = useRef(0);
   const objectUrlRef = useRef<string | null>(null);
   const abortRef = useRef<AbortController | null>(null);
+  const [listening, setListening] = useState(false);
+  const [micError, setMicError] = useState<string | null>(null);
+  const recognitionRef = useRef<SpeechRecognition | null>(null);
+  const askRef = useRef<(question: string) => Promise<void>>(async () => {});
 
   useEffect(() => {
     let cancelled = false;
@@ -56,6 +60,87 @@ export default function CoachPage() {
   }, []);
 
   useEffect(() => stopPlayback, [stopPlayback]);
+
+  useEffect(() => {
+    askRef.current = ask;
+  });
+
+  useEffect(
+    () => () => {
+      const recognition = recognitionRef.current;
+      if (!recognition) return;
+      recognition.onresult = null;
+      recognition.onerror = null;
+      recognition.onend = null;
+      recognition.abort();
+      recognitionRef.current = null;
+    },
+    [],
+  );
+
+  /** Browser dictation, created on first use so a missing API is a click-time error. */
+  function createRecognition(): SpeechRecognition | null {
+    const Recognition =
+      window.SpeechRecognition ?? window.webkitSpeechRecognition;
+    if (!Recognition) return null;
+
+    const recognition = new Recognition();
+    recognition.lang = navigator.language || "en-GB";
+    recognition.continuous = false;
+    recognition.interimResults = true;
+
+    recognition.onresult = (event) => {
+      let interim = "";
+      let final = "";
+      for (let index = event.resultIndex; index < event.results.length; index++) {
+        const result = event.results[index];
+        if (result.isFinal) final += result[0].transcript;
+        else interim += result[0].transcript;
+      }
+      if (final.trim() !== "") {
+        setInput("");
+        void askRef.current(final.trim());
+      } else {
+        setInput(interim);
+      }
+    };
+    recognition.onerror = (event) => {
+      setListening(false);
+      setMicError(
+        event.error === "not-allowed"
+          ? "microphone permission denied"
+          : `microphone error: ${event.error}`,
+      );
+    };
+    recognition.onend = () => setListening(false);
+    return recognition;
+  }
+
+  function toggleListening() {
+    if (listening) {
+      recognitionRef.current?.stop();
+      setListening(false);
+      return;
+    }
+
+    const recognition = recognitionRef.current ?? createRecognition();
+    if (!recognition) {
+      setMicError("speech recognition is not supported in this browser");
+      return;
+    }
+    recognitionRef.current = recognition;
+
+    stopPlayback();
+    setSpeakingIndex(null);
+    setMicError(null);
+    try {
+      recognition.start();
+      setListening(true);
+    } catch {
+      // start() throws if recognition is already running; keep the UI honest.
+      setListening(false);
+    }
+  }
 
   function toggleSpeech(text: string, index: number) {
     if (speakingIndex === index) {
@@ -231,6 +316,10 @@ export default function CoachPage() {
         </p>
       )}
       {voiceError && <p className="text-sm text-red-600">{voiceError}</p>}
+      {micError && <p className="text-sm text-red-600">{micError}</p>}
+      {listening && (
+        <p className="text-sm text-blue-600">Listening — ask your question.</p>
+      )}
 
       <div className="flex flex-wrap gap-2">
         {STARTER_QUESTIONS.map((question) => (
@@ -247,6 +336,29 @@ export default function CoachPage() {
       </div>
 
       <form onSubmit={send} className="flex gap-2">
+        <button
+          type="button"
+          onClick={toggleListening}
+          disabled={pending}
+          title={listening ? "Stop listening" : "Ask by voice"}
+          aria-label={listening ? "Stop listening" : "Ask by voice"}
+          aria-pressed={listening}
+          className={
+            listening
+              ? "shrink-0 rounded-full bg-red-600 px-3 py-2 text-white"
+              : "shrink-0 rounded-full border border-gray-300 px-3 py-2 text-gray-600 disabled:opacity-40 dark:border-gray-700 dark:text-gray-300"
+          }
+        >
+          <svg
+            viewBox="0 0 24 24"
+            aria-hidden="true"
+            fill="currentColor"
+            className={listening ? "size-4 animate-pulse" : "size-4"}
+          >
+            <path d="M12 14a3 3 0 0 0 3-3V6a3 3 0 0 0-6 0v5a3 3 0 0 0 3 3z" />
+            <path d="M18 11a6 6 0 0 1-12 0H4a8 8 0 0 0 7 7.94V22h2v-3.06A8 8 0 0 0 20 11h-2z" />
+          </svg>
+        </button>
         <input
           value={input}
           onChange={(event) => setInput(event.target.value)}
