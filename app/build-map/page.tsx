@@ -14,6 +14,7 @@ import type { RunSummary } from "@/lib/run";
 
 const COMMITS = commitData as Commit[];
 const REFRESH_MS = 10000;
+const EMPTY_POINTS: RunSummary["points"] = [];
 const TRACK = trackPath();
 
 /** Flags pins whose nearest run point is far from the commit, so the lap is a guess. */
@@ -29,6 +30,47 @@ function timeLabel(iso: string): string {
   return Number.isNaN(date.getTime())
     ? "—"
     : date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+}
+
+function timeRange(commits: Commit[], points: RunSummary["points"]): string {
+  const timestamps = [
+    ...commits.map((commit) => commit.isoDate),
+    ...points.map((point) => point.timestamp),
+  ]
+    .map((timestamp) => new Date(timestamp))
+    .filter((date) => !Number.isNaN(date.getTime()))
+    .sort((a, b) => a.getTime() - b.getTime());
+
+  if (timestamps.length === 0) return "—";
+  return `${timeLabel(timestamps[0].toISOString())}–${timeLabel(
+    timestamps[timestamps.length - 1].toISOString(),
+  )}`;
+}
+
+function SummaryStat({
+  label,
+  value,
+  unit,
+}: {
+  label: string;
+  value: string;
+  unit?: string;
+}) {
+  return (
+    <div className="flex min-w-0 flex-col gap-2">
+      <span className="text-xs font-semibold tracking-[0.2em] text-white/45 uppercase sm:text-sm">
+        {label}
+      </span>
+      <span className="text-3xl leading-none font-black tracking-tight text-white tabular-nums sm:text-4xl lg:text-5xl">
+        {value}
+        {unit && (
+          <span className="ml-2 text-base font-bold text-[#c6ff00] sm:text-lg">
+            {unit}
+          </span>
+        )}
+      </span>
+    </div>
+  );
 }
 
 /**
@@ -53,14 +95,13 @@ function placePins(pins: Pin[]): Array<{ x: number; y: number }> {
     return {
       x: TRACK_VIEWBOX.width / 2 + (base.x - TRACK_VIEWBOX.width / 2) * factor,
       y:
-        TRACK_VIEWBOX.height / 2 +
-        (base.y - TRACK_VIEWBOX.height / 2) * factor,
+        TRACK_VIEWBOX.height / 2 + (base.y - TRACK_VIEWBOX.height / 2) * factor,
     };
   });
 }
 
 export default function BuildMapPage() {
-  const [points, setPoints] = useState<RunSummary["points"]>([]);
+  const [run, setRun] = useState<RunSummary | null>(null);
   const [matched, setMatched] = useState(false);
   const [selected, setSelected] = useState(COMMITS.length - 1);
 
@@ -68,7 +109,7 @@ export default function BuildMapPage() {
     fetch("/api/run", { cache: "no-store" })
       .then((response) => response.json() as Promise<RunSummary>)
       .then((run) => {
-        setPoints(run.points);
+        setRun(run);
         setMatched(run.points.length > 0);
       })
       .catch(() => undefined);
@@ -80,9 +121,14 @@ export default function BuildMapPage() {
     return () => clearInterval(timer);
   }, [load]);
 
+  const points = run?.points ?? EMPTY_POINTS;
   const pins = useMemo(() => buildPins(COMMITS, points), [points]);
   const positions = useMemo(() => placePins(pins), [pins]);
   const active = pins[selected] ?? pins[pins.length - 1] ?? null;
+  const runnerCount =
+    points.length === 0
+      ? "—"
+      : new Set(points.map((point) => point.runnerName)).size.toString();
 
   return (
     <div className="flex flex-1 flex-col bg-black text-white">
@@ -99,6 +145,28 @@ export default function BuildMapPage() {
           {matched
             ? ` matched to the nearest run point across ${points.length} recorded points`
             : " — waiting for run points, so pins sit in commit order until the run data lands"}
+        </p>
+        <section
+          aria-label="Build map summary"
+          className="grid grid-cols-2 gap-6 rounded-2xl border border-[#c6ff00]/35 bg-[#c6ff00]/[0.06] p-6 sm:gap-8 sm:p-8 lg:grid-cols-4"
+        >
+          <SummaryStat
+            label="Total distance"
+            value={
+              run && points.length > 0
+                ? (run.totalDistanceMeters / 1000).toFixed(2)
+                : "—"
+            }
+            unit={run && points.length > 0 ? "km" : undefined}
+          />
+          <SummaryStat label="Commits" value={COMMITS.length.toString()} />
+          <SummaryStat label="Runners" value={runnerCount} />
+          <SummaryStat label="Time range" value={timeRange(COMMITS, points)} />
+        </section>
+        <p className="text-xs text-white/35">
+          Commit timestamps and GPS timestamps are separate records,
+          cross-referenced by nearest time — no commit is assumed to have
+          happened at a run point.
         </p>
       </header>
 
