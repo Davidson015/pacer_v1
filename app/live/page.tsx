@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import type { RunSummary } from "@/lib/run";
+import { summarize, type RunPoint, type RunSummary } from "@/lib/run";
 
 const REFRESH_MS = 10000;
 
@@ -19,6 +19,15 @@ function currentPace(run: RunSummary): number | null {
   if (lastLap?.paceMinPerKm != null) return lastLap.paceMinPerKm;
   const last = run.points[run.points.length - 1];
   return last ? last.pace : null;
+}
+
+function latestPoint(points: RunPoint[]): RunPoint | null {
+  return points.reduce<RunPoint | null>((latest, point) => {
+    if (!latest || Date.parse(point.timestamp) > Date.parse(latest.timestamp)) {
+      return point;
+    }
+    return latest;
+  }, null);
 }
 
 type Route = { path: string; head: { x: number; y: number } };
@@ -92,6 +101,10 @@ export default function LivePage() {
   const [run, setRun] = useState<RunSummary | null>(null);
   const [signupCount, setSignupCount] = useState<number | null>(null);
   const [runnerCount, setRunnerCount] = useState<number | null>(null);
+  const [activeRunner, setActiveRunner] = useState<{
+    runnerName: string;
+    teamName: string;
+  } | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [updatedAt, setUpdatedAt] = useState<string | null>(null);
 
@@ -113,7 +126,20 @@ export default function LivePage() {
         signupResponse.json() as Promise<{ signupCount?: number }>,
         leaderboardResponse.json() as Promise<{ runnerCount?: number }>,
       ]);
-      setRun(summary);
+      const latest = latestPoint(summary.points);
+      const scopedPoints = latest
+        ? summary.points.filter(
+            (point) =>
+              point.runnerName === latest.runnerName &&
+              point.teamName === latest.teamName,
+          )
+        : [];
+      setRun(summarize(scopedPoints));
+      setActiveRunner(
+        latest
+          ? { runnerName: latest.runnerName, teamName: latest.teamName }
+          : null,
+      );
       setSignupCount(
         typeof signups.signupCount === "number" ? signups.signupCount : null,
       );
@@ -155,6 +181,14 @@ export default function LivePage() {
           {error ?? `updated ${updatedAt ?? "…"} · every 10s`}
         </p>
       </header>
+      <p className="border-b border-white/10 px-5 py-3 text-sm text-white/50 sm:px-8 sm:text-base">
+        showing{" "}
+        {activeRunner
+          ? `${activeRunner.runnerName} · ${activeRunner.teamName} run`
+          : "—"}{" "}
+        · {runnerCount === null ? "—" : runnerCount} runners today · full board
+        on /leaderboard
+      </p>
 
       <main className="grid flex-1 gap-8 px-5 py-8 sm:gap-10 sm:px-8 sm:py-10 lg:grid-cols-[1.1fr_1fr]">
         <section className="flex flex-col gap-4">
