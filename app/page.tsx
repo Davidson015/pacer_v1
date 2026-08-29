@@ -21,38 +21,38 @@ const SECTIONS = [
 export default function Home() {
   return (
     <div className="flex flex-1 flex-col bg-black text-white">
-      <header className="mx-auto flex w-full max-w-6xl items-center justify-between px-6 py-6">
+      <header className="mx-auto flex w-full max-w-6xl flex-wrap items-center justify-between gap-4 px-6 py-6">
         <span className="text-lg font-bold tracking-tight">
           Pacer<span className="text-[#c6ff00]">.</span>
         </span>
-        <nav className="flex items-center gap-3">
+        <nav className="flex max-w-full flex-wrap items-center justify-end gap-2">
           <a
             href="/build-map"
-            className="rounded-full border border-white/20 px-4 py-2 text-sm font-medium hover:border-[#c6ff00] hover:text-[#c6ff00]"
+            className="min-h-11 rounded-full border border-white/20 px-3 py-2 text-sm font-medium hover:border-[#c6ff00] hover:text-[#c6ff00]"
           >
             Build map
           </a>
           <a
             href="/live"
-            className="rounded-full border border-white/20 px-4 py-2 text-sm font-medium hover:border-[#c6ff00] hover:text-[#c6ff00]"
+            className="min-h-11 rounded-full border border-white/20 px-3 py-2 text-sm font-medium hover:border-[#c6ff00] hover:text-[#c6ff00]"
           >
             Live run
           </a>
           <a
             href="/leaderboard"
-            className="rounded-full border border-white/20 px-4 py-2 text-sm font-medium hover:border-[#c6ff00] hover:text-[#c6ff00]"
+            className="min-h-11 rounded-full border border-white/20 px-3 py-2 text-sm font-medium hover:border-[#c6ff00] hover:text-[#c6ff00]"
           >
             Leaderboard
           </a>
           <a
             href="/track"
-            className="rounded-full border border-white/20 px-4 py-2 text-sm font-medium hover:border-[#c6ff00] hover:text-[#c6ff00]"
+            className="min-h-11 rounded-full border border-white/20 px-3 py-2 text-sm font-medium hover:border-[#c6ff00] hover:text-[#c6ff00]"
           >
             Track
           </a>
           <a
             href="/coach"
-            className="rounded-full border border-white/20 px-4 py-2 text-sm font-medium hover:border-[#c6ff00] hover:text-[#c6ff00]"
+            className="min-h-11 rounded-full border border-white/20 px-3 py-2 text-sm font-medium hover:border-[#c6ff00] hover:text-[#c6ff00]"
           >
             Open the coach
           </a>
@@ -64,7 +64,7 @@ export default function Home() {
           <p className="text-sm font-semibold tracking-[0.25em] text-[#c6ff00] uppercase">
             the coach built by the run
           </p>
-          <h1 className="max-w-4xl text-5xl leading-[0.95] font-black tracking-tight sm:text-7xl lg:text-8xl">
+          <h1 className="max-w-4xl text-4xl leading-[0.95] font-black tracking-tight sm:text-7xl lg:text-8xl">
             The first AI coach built by an{" "}
             <span className="text-[#c6ff00]">actual run</span>.
           </h1>
@@ -80,7 +80,7 @@ export default function Home() {
           {SECTIONS.map((section) => (
             <div
               key={section.label}
-              className="flex flex-col gap-4 bg-black p-8"
+              className="flex flex-col gap-4 bg-black p-6 sm:p-8"
             >
               <span className="font-mono text-sm text-[#c6ff00]">
                 {section.label}
@@ -93,13 +93,13 @@ export default function Home() {
           ))}
         </section>
 
-        <section className="flex flex-col items-start gap-6 rounded-3xl border border-[#c6ff00]/30 bg-[#c6ff00]/5 p-10">
+        <section className="flex flex-col items-start gap-6 rounded-3xl border border-[#c6ff00]/30 bg-[#c6ff00]/5 p-6 sm:p-10">
           <h2 className="max-w-2xl text-3xl font-black tracking-tight sm:text-4xl">
             Your splits are already talking. Pacer just answers.
           </h2>
           <a
             href="/coach"
-            className="rounded-full bg-[#c6ff00] px-6 py-3 font-semibold text-black hover:brightness-110"
+            className="min-h-11 rounded-full bg-[#c6ff00] px-6 py-3 font-semibold text-black hover:brightness-110"
           >
             Talk to your coach
           </a>

@@ -231,26 +231,26 @@ export default function TrackPage() {
 
   return (
     <div className="flex flex-1 flex-col bg-black text-white">
-      <header className="flex flex-wrap items-center justify-between gap-4 border-b border-white/10 px-8 py-6">
+      <header className="flex flex-wrap items-center justify-between gap-4 border-b border-white/10 px-5 py-5 sm:px-8 sm:py-6">
         <div>
           <p className="text-xs font-semibold tracking-[0.3em] text-[#c6ff00] uppercase sm:text-sm">
             Pacer track
           </p>
-          <h1 className="mt-2 text-4xl leading-none font-black tracking-tight sm:text-6xl">
+          <h1 className="mt-2 text-3xl leading-none font-black tracking-tight sm:text-6xl">
             Put your run <span className="text-[#c6ff00]">on the board.</span>
           </h1>
         </div>
         <a
           href="/leaderboard"
-          className="rounded-full border border-white/20 px-5 py-3 text-sm font-semibold hover:border-[#c6ff00] hover:text-[#c6ff00]"
+          className="min-h-11 rounded-full border border-white/20 px-5 py-3 text-sm font-semibold hover:border-[#c6ff00] hover:text-[#c6ff00]"
         >
           View leaderboard
         </a>
       </header>
 
-      <main className="mx-auto flex w-full max-w-5xl flex-1 flex-col gap-10 px-8 py-10">
+      <main className="mx-auto flex w-full max-w-5xl flex-1 flex-col gap-8 px-5 py-8 sm:gap-10 sm:px-8 sm:py-10">
         {!registered ? (
-          <section className="max-w-xl rounded-3xl border border-[#c6ff00]/30 bg-[#c6ff00]/[0.06] p-8 sm:p-10">
+          <section className="max-w-xl rounded-3xl border border-[#c6ff00]/30 bg-[#c6ff00]/[0.06] p-6 sm:p-10">
             <p className="text-sm font-semibold tracking-[0.2em] text-[#c6ff00] uppercase">
               Join the run
             </p>
@@ -268,7 +268,7 @@ export default function TrackPage() {
                   value={runnerName}
                   onChange={(event) => setRunnerName(event.target.value)}
                   placeholder="Alex Morgan"
-                  className="rounded-2xl border border-white/15 bg-white/5 px-5 py-4 text-lg text-white placeholder:text-white/30 focus:border-[#c6ff00] focus:outline-none"
+                  className="min-w-0 rounded-2xl border border-white/15 bg-white/5 px-5 py-4 text-lg text-white placeholder:text-white/30 focus:border-[#c6ff00] focus:outline-none"
                 />
               </label>
               <label className="flex flex-col gap-2 text-sm font-semibold text-white/60">
@@ -278,24 +278,24 @@ export default function TrackPage() {
                   value={teamName}
                   onChange={(event) => setTeamName(event.target.value)}
                   placeholder="Pacer Track Club"
-                  className="rounded-2xl border border-white/15 bg-white/5 px-5 py-4 text-lg text-white placeholder:text-white/30 focus:border-[#c6ff00] focus:outline-none"
+                  className="min-w-0 rounded-2xl border border-white/15 bg-white/5 px-5 py-4 text-lg text-white placeholder:text-white/30 focus:border-[#c6ff00] focus:outline-none"
                 />
               </label>
               <button
                 type="submit"
                 disabled={registering}
-                className="mt-2 rounded-full bg-[#c6ff00] px-6 py-4 text-lg font-black text-black hover:brightness-110 disabled:opacity-60"
+                className="mt-2 min-h-11 rounded-full bg-[#c6ff00] px-6 py-4 text-lg font-black text-black hover:brightness-110 disabled:opacity-60"
               >
                 {registering ? "Joining…" : "Join leaderboard"}
               </button>
             </form>
           </section>
         ) : (
-          <section className="rounded-3xl border border-[#c6ff00]/30 bg-[#c6ff00]/[0.06] p-8 sm:p-10">
+          <section className="rounded-3xl border border-[#c6ff00]/30 bg-[#c6ff00]/[0.06] p-6 sm:p-10">
             <p className="text-sm font-semibold tracking-[0.2em] text-[#c6ff00] uppercase">
               Ready to run
             </p>
-            <h2 className="mt-3 text-4xl font-black tracking-tight sm:text-6xl">
+            <h2 className="mt-3 break-words text-3xl font-black tracking-tight sm:text-6xl">
               {registered.runnerName}
             </h2>
             <p className="mt-2 text-2xl font-bold text-white/50">
@@ -306,7 +306,7 @@ export default function TrackPage() {
                 <button
                   type="button"
                   onClick={startTracking}
-                  className="rounded-full bg-[#c6ff00] px-7 py-4 text-lg font-black text-black hover:brightness-110"
+                  className="min-h-11 rounded-full bg-[#c6ff00] px-7 py-4 text-lg font-black text-black hover:brightness-110"
                 >
                   Start tracking
                 </button>
@@ -314,14 +314,14 @@ export default function TrackPage() {
                 <button
                   type="button"
                   onClick={stopTracking}
-                  className="rounded-full border border-red-400/60 px-7 py-4 text-lg font-black text-red-300 hover:border-red-300"
+                  className="min-h-11 rounded-full border border-red-400/60 px-7 py-4 text-lg font-black text-red-300 hover:border-red-300"
                 >
                   Stop
                 </button>
               )}
               <a
                 href="/leaderboard"
-                className="rounded-full border border-white/20 px-7 py-4 text-lg font-semibold hover:border-[#c6ff00] hover:text-[#c6ff00]"
+                className="min-h-11 rounded-full border border-white/20 px-7 py-4 text-lg font-semibold hover:border-[#c6ff00] hover:text-[#c6ff00]"
               >
                 Leaderboard
               </a>
@@ -329,7 +329,7 @@ export default function TrackPage() {
           </section>
         )}
 
-        <section className="grid gap-8 rounded-3xl border border-white/10 bg-white/[0.03] p-8 sm:grid-cols-3 sm:p-10">
+        <section className="grid gap-6 rounded-3xl border border-white/10 bg-white/[0.03] p-6 sm:grid-cols-3 sm:gap-8 sm:p-10">
           <div>
             <p className="text-xs font-semibold tracking-[0.2em] text-white/40 uppercase">
               Points sent
@@ -342,13 +342,15 @@ export default function TrackPage() {
             <p className="text-xs font-semibold tracking-[0.2em] text-white/40 uppercase">
               Last fix
             </p>
-            <p className="mt-2 text-2xl font-bold">{lastFixTime ?? "—"}</p>
+            <p className="mt-2 break-words text-2xl font-bold">
+              {lastFixTime ?? "—"}
+            </p>
           </div>
           <div>
             <p className="text-xs font-semibold tracking-[0.2em] text-white/40 uppercase">
               Status
             </p>
-            <p className="mt-2 text-lg font-semibold text-white/70">
+            <p className="mt-2 break-words text-lg font-semibold text-white/70">
               {tracking ? "Listening for GPS" : (statusMessage ?? "Ready")}
             </p>
           </div>

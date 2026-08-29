@@ -60,32 +60,32 @@ export default function LeaderboardClient({ qrCode }: { qrCode?: ReactNode }) {
 
   return (
     <div className="flex flex-1 flex-col bg-black text-white">
-      <header className="flex flex-wrap items-center justify-between gap-4 border-b border-white/10 px-8 py-6">
+      <header className="flex flex-wrap items-center justify-between gap-4 border-b border-white/10 px-5 py-5 sm:px-8 sm:py-6">
         <div>
           <p className="text-xs font-semibold tracking-[0.3em] text-[#c6ff00] uppercase sm:text-sm">
             Pacer leaderboard
           </p>
-          <h1 className="mt-2 text-4xl leading-none font-black tracking-tight sm:text-6xl">
+          <h1 className="mt-2 text-3xl leading-none font-black tracking-tight sm:text-6xl">
             Run the board.
           </h1>
         </div>
         <nav className="flex flex-wrap items-center gap-3">
           <a
             href="/track"
-            className="rounded-full bg-[#c6ff00] px-5 py-3 text-sm font-black text-black hover:brightness-110"
+            className="min-h-11 rounded-full bg-[#c6ff00] px-5 py-3 text-sm font-black text-black hover:brightness-110"
           >
             Start tracking
           </a>
           <a
             href="/live"
-            className="rounded-full border border-white/20 px-5 py-3 text-sm font-semibold hover:border-[#c6ff00] hover:text-[#c6ff00]"
+            className="min-h-11 rounded-full border border-white/20 px-5 py-3 text-sm font-semibold hover:border-[#c6ff00] hover:text-[#c6ff00]"
           >
             Live run
           </a>
         </nav>
       </header>
 
-      <main className="mx-auto grid w-full max-w-7xl flex-1 gap-10 px-8 py-10 lg:grid-cols-[1fr_320px]">
+      <main className="mx-auto grid w-full max-w-7xl flex-1 gap-8 px-5 py-8 sm:gap-10 sm:px-8 sm:py-10 lg:grid-cols-[1fr_320px]">
         <section>
           <div className="mb-8 flex flex-wrap items-end justify-between gap-4">
             <div>
@@ -117,52 +117,52 @@ export default function LeaderboardClient({ qrCode }: { qrCode?: ReactNode }) {
                   key={`${entry.runnerName}|${entry.teamName}`}
                   className={
                     index === 0
-                      ? "rounded-3xl border border-[#c6ff00]/70 bg-[#c6ff00]/[0.08] p-6 sm:p-8"
-                      : "rounded-3xl border border-white/10 bg-white/[0.03] p-6 sm:p-8"
+                      ? "rounded-3xl border border-[#c6ff00]/70 bg-[#c6ff00]/[0.08] p-5 sm:p-8"
+                      : "rounded-3xl border border-white/10 bg-white/[0.03] p-5 sm:p-8"
                   }
                 >
                   <div className="grid gap-5 sm:grid-cols-[100px_1fr_auto] sm:items-center">
                     <p
-                      className={`text-7xl leading-none font-black tabular-nums ${index === 0 ? "text-[#c6ff00]" : "text-white/25"}`}
+                      className={`text-6xl leading-none font-black tabular-nums sm:text-7xl ${index === 0 ? "text-[#c6ff00]" : "text-white/25"}`}
                     >
                       {index + 1}
                     </p>
                     <div>
-                      <h2 className="text-3xl font-black tracking-tight sm:text-4xl">
+                      <h2 className="break-words text-2xl font-black tracking-tight sm:text-4xl">
                         {entry.runnerName}
                       </h2>
                       <p className="mt-1 text-lg font-semibold text-white/45">
                         {entry.teamName}
                       </p>
                     </div>
-                    <div className="grid grid-cols-3 gap-5 sm:min-w-[290px]">
+                    <div className="grid min-w-0 grid-cols-3 gap-2 sm:min-w-[290px] sm:gap-5">
                       <div>
-                        <p className="text-xs font-semibold tracking-[0.15em] text-white/35 uppercase">
+                        <p className="text-[10px] font-semibold tracking-[0.08em] text-white/35 uppercase sm:text-xs sm:tracking-[0.15em]">
                           Distance
                         </p>
-                        <p className="mt-1 text-xl font-black tabular-nums">
+                        <p className="mt-1 text-base font-black break-words tabular-nums sm:text-xl">
                           {distanceLabel(entry)}
                         </p>
                       </div>
                       <div>
-                        <p className="text-xs font-semibold tracking-[0.15em] text-white/35 uppercase">
+                        <p className="text-[10px] font-semibold tracking-[0.08em] text-white/35 uppercase sm:text-xs sm:tracking-[0.15em]">
                           Avg pace
                         </p>
-                        <p className="mt-1 text-xl font-black tabular-nums">
+                        <p className="mt-1 text-base font-black break-words tabular-nums sm:text-xl">
                           {paceLabel(entry.averagePaceMinPerKm)}
                         </p>
                       </div>
                       <div>
-                        <p className="text-xs font-semibold tracking-[0.15em] text-white/35 uppercase">
+                        <p className="text-[10px] font-semibold tracking-[0.08em] text-white/35 uppercase sm:text-xs sm:tracking-[0.15em]">
                           Laps
                         </p>
-                        <p className="mt-1 text-xl font-black tabular-nums">
+                        <p className="mt-1 text-base font-black break-words tabular-nums sm:text-xl">
                           {lapsLabel(entry)}
                         </p>
                       </div>
                     </div>
                   </div>
-                  <p className="mt-6 border-t border-white/10 pt-4 text-lg font-semibold text-white/65">
+                  <p className="mt-5 border-t border-white/10 pt-4 text-base font-semibold text-white/65 sm:mt-6 sm:text-lg">
                     {entry.comment}
                   </p>
                 </article>
@@ -171,7 +171,7 @@ export default function LeaderboardClient({ qrCode }: { qrCode?: ReactNode }) {
           )}
         </section>
 
-        {qrCode && <aside>{qrCode}</aside>}
+        {qrCode && <aside className="w-full lg:max-w-[320px]">{qrCode}</aside>}
       </main>
     </div>
   );

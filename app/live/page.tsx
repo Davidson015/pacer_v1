@@ -76,10 +76,10 @@ function Stat({
       <span className="text-sm font-semibold tracking-[0.2em] text-white/40 uppercase sm:text-base">
         {label}
       </span>
-      <span className="text-6xl leading-none font-black tracking-tight text-white tabular-nums sm:text-7xl lg:text-8xl">
+      <span className="text-5xl leading-none font-black tracking-tight text-white tabular-nums sm:text-7xl lg:text-8xl">
         {value}
         {unit && (
-          <span className="ml-2 text-2xl font-bold text-[#c6ff00] sm:text-3xl">
+          <span className="ml-1 text-xl font-bold text-[#c6ff00] sm:ml-2 sm:text-3xl">
             {unit}
           </span>
         )}
@@ -143,10 +143,10 @@ export default function LivePage() {
 
   return (
     <div className="flex flex-1 flex-col bg-black text-white">
-      <header className="flex flex-wrap items-center justify-between gap-4 border-b border-white/10 px-8 py-6">
+      <header className="flex flex-wrap items-center justify-between gap-4 border-b border-white/10 px-5 py-5 sm:px-8 sm:py-6">
         <h1 className="text-2xl font-black tracking-tight sm:text-3xl">
           Live<span className="text-[#c6ff00]">.</span>
-          <span className="ml-4 text-base font-medium text-white/40 sm:text-lg">
+          <span className="ml-2 text-base font-medium text-white/40 sm:ml-4 sm:text-lg">
             today&apos;s run
           </span>
         </h1>
@@ -156,7 +156,7 @@ export default function LivePage() {
         </p>
       </header>
 
-      <main className="grid flex-1 gap-10 px-8 py-10 lg:grid-cols-[1.1fr_1fr]">
+      <main className="grid flex-1 gap-8 px-5 py-8 sm:gap-10 sm:px-8 sm:py-10 lg:grid-cols-[1.1fr_1fr]">
         <section className="flex flex-col gap-4">
           <span className="text-sm font-semibold tracking-[0.2em] text-white/40 uppercase sm:text-base">
             Route
@@ -167,7 +167,7 @@ export default function LivePage() {
                 viewBox="0 0 600 400"
                 role="img"
                 aria-label="Route of today's run"
-                className="h-full max-h-[52vh] w-full"
+                className="block h-auto max-h-[52vh] w-full"
               >
                 <path
                   d={route.path}
@@ -180,14 +180,14 @@ export default function LivePage() {
                 <circle cx={route.head.x} cy={route.head.y} r={9} fill="#fff" />
               </svg>
             ) : (
-              <p className="p-10 text-center text-xl text-white/40">
+              <p className="p-6 text-center text-lg text-white/40 sm:p-10 sm:text-xl">
                 Waiting for run points — the route draws itself as they arrive.
               </p>
             )}
           </div>
         </section>
 
-        <section className="grid gap-10 sm:grid-cols-2">
+        <section className="grid min-w-0 gap-6 sm:grid-cols-2 sm:gap-10">
           <Stat
             label="Current pace"
             value={run ? paceLabel(currentPace(run)) : "—"}
@@ -220,10 +220,10 @@ export default function LivePage() {
             <span className="text-sm font-semibold tracking-[0.2em] text-white/40 uppercase sm:text-base">
               Running now
             </span>
-            <p className="mt-1 text-5xl leading-tight font-black tracking-tight sm:text-6xl">
+            <p className="mt-1 break-words text-4xl leading-tight font-black tracking-tight sm:text-6xl">
               {last ? last.runnerName : "Nobody yet"}
             </p>
-            <p className="mt-2 text-2xl font-bold text-[#c6ff00]">
+            <p className="mt-2 break-words text-xl font-bold text-[#c6ff00] sm:text-2xl">
               {last ? last.teamName : "waiting for the first point"}
             </p>
           </div>

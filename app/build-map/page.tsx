@@ -143,11 +143,11 @@ export default function BuildMapPage() {
 
   return (
     <div className="flex flex-1 flex-col bg-black text-white">
-      <header className="flex flex-col gap-2 px-8 pt-10 pb-6">
+      <header className="flex flex-col gap-2 px-5 pt-8 pb-5 sm:px-8 sm:pt-10 sm:pb-6">
         <p className="text-xs font-semibold tracking-[0.3em] text-[#c6ff00] uppercase sm:text-sm">
           Pacer build map
         </p>
-        <h1 className="max-w-5xl text-4xl leading-[0.95] font-black tracking-tight sm:text-6xl lg:text-7xl">
+        <h1 className="max-w-5xl text-3xl leading-[0.95] font-black tracking-tight sm:text-6xl lg:text-7xl">
           Every feature on this map{" "}
           <span className="text-[#c6ff00]">shipped on a lap</span>.
         </h1>
@@ -159,7 +159,7 @@ export default function BuildMapPage() {
         </p>
         <section
           aria-label="Build map summary"
-          className="grid grid-cols-2 gap-6 rounded-2xl border border-[#c6ff00]/35 bg-[#c6ff00]/[0.06] p-6 sm:gap-8 sm:p-8 lg:grid-cols-4"
+          className="grid grid-cols-2 gap-4 rounded-2xl border border-[#c6ff00]/35 bg-[#c6ff00]/[0.06] p-4 sm:gap-8 sm:p-8 lg:grid-cols-4"
         >
           <SummaryStat
             label="Total distance"
@@ -185,13 +185,13 @@ export default function BuildMapPage() {
         </p>
       </header>
 
-      <main className="grid flex-1 gap-8 px-8 pb-12 lg:grid-cols-[1.45fr_1fr]">
-        <section className="relative rounded-3xl border border-white/10 bg-[radial-gradient(circle_at_50%_45%,rgba(198,255,0,0.12),transparent_65%)] p-4">
+      <main className="grid flex-1 gap-6 px-5 pb-10 sm:gap-8 sm:px-8 sm:pb-12 lg:grid-cols-[1.45fr_1fr]">
+        <section className="relative rounded-3xl border border-white/10 bg-[radial-gradient(circle_at_50%_45%,rgba(198,255,0,0.12),transparent_65%)] p-3 sm:p-4">
           <svg
             viewBox={`0 0 ${TRACK_VIEWBOX.width} ${TRACK_VIEWBOX.height}`}
             role="img"
             aria-label="Running track with a pin for every commit"
-            className="h-full w-full"
+            className="block h-auto w-full"
           >
             <path
               d={TRACK}
@@ -278,7 +278,7 @@ export default function BuildMapPage() {
           </svg>
 
           {active && (
-            <div className="pointer-events-auto absolute top-6 right-6 max-h-[60vh] max-w-sm overflow-y-auto rounded-2xl border border-[#c6ff00]/40 bg-black/90 p-6 backdrop-blur">
+            <div className="pointer-events-auto relative mt-3 max-h-[60vh] w-full max-w-sm overflow-y-auto rounded-2xl border border-[#c6ff00]/40 bg-black/90 p-4 backdrop-blur sm:absolute sm:top-6 sm:right-6 sm:mt-0 sm:p-6">
               <p className="font-mono text-xs text-[#c6ff00]">
                 #{selected + 1} · {active.commit.hash} ·{" "}
                 {dateTimeLabel(active.commit.isoDate)}
@@ -310,7 +310,7 @@ export default function BuildMapPage() {
           )}
         </section>
 
-        <section className="flex max-h-[70vh] flex-col gap-2 overflow-y-auto pr-2">
+        <section className="flex max-h-[70vh] min-h-0 flex-col gap-2 overflow-y-auto pr-1 sm:pr-2">
           {pins.map((pin, index) => (
             <button
               key={pin.commit.hash}

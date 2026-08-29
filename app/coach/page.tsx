@@ -126,7 +126,11 @@ export default function CoachPage() {
     recognition.onresult = (event) => {
       let interim = "";
       let final = "";
-      for (let index = event.resultIndex; index < event.results.length; index++) {
+      for (
+        let index = event.resultIndex;
+        index < event.results.length;
+        index++
+      ) {
         const result = event.results[index];
         if (result.isFinal) final += result[0].transcript;
         else interim += result[0].transcript;
@@ -286,7 +290,7 @@ export default function CoachPage() {
   }
 
   return (
-    <main className="mx-auto flex w-full max-w-2xl flex-1 flex-col gap-4 p-6">
+    <main className="mx-auto flex min-h-0 w-full max-w-2xl flex-1 flex-col gap-4 p-4 sm:p-6">
       <header>
         <h1 className="text-3xl font-bold tracking-tight">Coach</h1>
         <p className="text-sm text-gray-600 dark:text-gray-400">
@@ -294,14 +298,14 @@ export default function CoachPage() {
         </p>
       </header>
 
-      <div className="flex flex-1 flex-col gap-3 overflow-y-auto">
+      <div className="flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto">
         {messages.map((message, index) => (
           <div
             key={index}
             className={
               message.role === "user"
-                ? "flex items-center gap-2 self-end"
-                : "flex items-center gap-2 self-start"
+                ? "flex min-w-0 max-w-full items-center gap-2 self-end"
+                : "flex min-w-0 max-w-full items-center gap-2 self-start"
             }
           >
             {message.role === "user" && (
@@ -314,8 +318,8 @@ export default function CoachPage() {
             <div
               className={
                 message.role === "user"
-                  ? "rounded-2xl bg-blue-600 px-4 py-2 text-white"
-                  : "rounded-2xl bg-gray-100 px-4 py-2 dark:bg-gray-800"
+                  ? "max-w-[calc(100vw-5rem)] rounded-2xl bg-blue-600 px-4 py-2 break-words whitespace-pre-wrap text-white sm:max-w-[85%]"
+                  : "max-w-[calc(100vw-5rem)] rounded-2xl bg-gray-100 px-4 py-2 break-words whitespace-pre-wrap dark:bg-gray-800 sm:max-w-[85%]"
               }
             >
               {message.content}
@@ -362,14 +366,17 @@ export default function CoachPage() {
             type="button"
             onClick={() => void ask(question)}
             disabled={pending}
-            className="rounded-full border border-gray-300 px-3 py-1 text-sm text-gray-700 disabled:opacity-50 dark:border-gray-700 dark:text-gray-300"
+            className="min-h-11 rounded-full border border-gray-300 px-4 py-2 text-sm text-gray-700 disabled:opacity-50 dark:border-gray-700 dark:text-gray-300"
           >
             {question}
           </button>
         ))}
       </div>
 
-      <form onSubmit={send} className="flex gap-2">
+      <form
+        onSubmit={send}
+        className="sticky bottom-0 flex gap-2 bg-white py-1 dark:bg-black"
+      >
         <button
           type="button"
           onClick={toggleListening}
@@ -379,8 +386,8 @@ export default function CoachPage() {
           aria-pressed={listening}
           className={
             listening
-              ? "shrink-0 rounded-full bg-red-600 px-3 py-2 text-white"
-              : "shrink-0 rounded-full border border-gray-300 px-3 py-2 text-gray-600 disabled:opacity-40 dark:border-gray-700 dark:text-gray-300"
+              ? "min-h-11 min-w-11 shrink-0 rounded-full bg-red-600 px-3 py-2 text-white"
+              : "min-h-11 min-w-11 shrink-0 rounded-full border border-gray-300 px-3 py-2 text-gray-600 disabled:opacity-40 dark:border-gray-700 dark:text-gray-300"
           }
         >
           <svg
@@ -398,12 +405,12 @@ export default function CoachPage() {
           onChange={(event) => setInput(event.target.value)}
           placeholder="How am I pacing?"
           aria-label="Message the coach"
-          className="flex-1 rounded-full border border-gray-300 px-4 py-2 dark:border-gray-700 dark:bg-gray-900"
+          className="min-w-0 flex-1 rounded-full border border-gray-300 px-4 py-2 dark:border-gray-700 dark:bg-gray-900"
         />
         <button
           type="submit"
           disabled={pending || input.trim() === ""}
-          className="rounded-full bg-blue-600 px-5 py-2 font-medium text-white disabled:opacity-50"
+          className="min-h-11 shrink-0 rounded-full bg-blue-600 px-5 py-2 font-medium text-white disabled:opacity-50"
         >
           Send
         </button>
@@ -441,7 +448,7 @@ function SpeakerButton({
             : "Play this message"
       }
       aria-label={active ? "Stop playing message" : "Play message aloud"}
-      className="shrink-0 rounded-full border border-gray-300 p-1.5 text-gray-600 disabled:opacity-40 dark:border-gray-700 dark:text-gray-300"
+      className="min-h-11 min-w-11 shrink-0 rounded-full border border-gray-300 p-2 text-gray-600 disabled:opacity-40 dark:border-gray-700 dark:text-gray-300"
     >
       <svg
         viewBox="0 0 24 24"
