@@ -20,6 +20,9 @@ export default function CoachPage() {
   const [speakingIndex, setSpeakingIndex] = useState<number | null>(null);
   const [voiceError, setVoiceError] = useState<string | null>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
+  const playbackIdRef = useRef(0);
+  const objectUrlRef = useRef<string | null>(null);
+  const abortRef = useRef<AbortController | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -34,13 +37,51 @@ export default function CoachPage() {
     };
   }, []);
 
+  /** Stops any current playback and frees its resources. */
+  const stopPlayback = useCallback(() => {
+    playbackIdRef.current += 1;
+    abortRef.current?.abort();
+    abortRef.current = null;
+
+    const audio = audioRef.current;
+    if (audio) {
+      audio.pause();
+      audio.removeAttribute("src");
+      audio.load();
+    }
+    if (objectUrlRef.current) {
+      URL.revokeObjectURL(objectUrlRef.current);
+      objectUrlRef.current = null;
+    }
+  }, []);
+
+  useEffect(() => stopPlayback, [stopPlayback]);
+
+  function toggleSpeech(text: string, index: number) {
+    if (speakingIndex === index) {
+      stopPlayback();
+      setSpeakingIndex(null);
+      return;
+    }
+    void speak(text, index);
+  }
+
+  /** Ignores events from a clip that a newer request already replaced. */
+  function clearIfCurrent(event: React.SyntheticEvent<HTMLAudioElement>) {
+    if (event.currentTarget.src === objectUrlRef.current) {
+      setSpeakingIndex(null);
+    }
+  }
+
   const speak = useCallback(
     async (text: string, index: number) => {
       const audio = audioRef.current;
       if (!audio) return;
 
-      audio.pause();
-      if (audio.src.startsWith("blob:")) URL.revokeObjectURL(audio.src);
+      stopPlayback();
+      const playbackId = playbackIdRef.current;
+      const controller = new AbortController();
+      abortRef.current = controller;
       setVoiceError(null);
       setSpeakingIndex(index);
 
@@ -49,6 +90,7 @@ export default function CoachPage() {
           method: "POST",
           headers: { "content-type": "application/json" },
           body: JSON.stringify({ text }),
+          signal: controller.signal,
         });
         if (!response.ok) {
           const data = (await response.json().catch(() => ({}))) as {
@@ -56,16 +98,26 @@ export default function CoachPage() {
           };
           throw new Error(data.error ?? "speech failed");
         }
-        audio.src = URL.createObjectURL(await response.blob());
+        const blob = await response.blob();
+        if (playbackId !== playbackIdRef.current) return;
+
+        const url = URL.createObjectURL(blob);
+        objectUrlRef.current = url;
+        audio.src = url;
         await audio.play();
       } catch (caught) {
+        // A newer request replaced this one: it owns the UI state now.
+        if (playbackId !== playbackIdRef.current) return;
         setSpeakingIndex(null);
+        if (caught instanceof DOMException && caught.name === "AbortError") {
+          return;
+        }
         setVoiceError(
           caught instanceof Error ? caught.message : "speech failed",
         );
       }
     },
-    [],
+    [stopPlayback],
   );
 
   async function ask(question: string) {
@@ -135,7 +187,7 @@ export default function CoachPage() {
           >
             {message.role === "user" && (
               <SpeakerButton
-                onClick={() => void speak(message.content, index)}
+                onClick={() => toggleSpeech(message.content, index)}
                 disabled={!voiceReady}
                 active={speakingIndex === index}
               />
@@ -151,7 +203,7 @@ export default function CoachPage() {
             </div>
             {message.role === "assistant" && (
               <SpeakerButton
-                onClick={() => void speak(message.content, index)}
+                onClick={() => toggleSpeech(message.content, index)}
                 disabled={!voiceReady}
                 active={speakingIndex === index}
               />
@@ -213,8 +265,8 @@ export default function CoachPage() {
 
       <audio
         ref={audioRef}
-        onEnded={() => setSpeakingIndex(null)}
-        onPause={() => setSpeakingIndex(null)}
+        onEnded={clearIfCurrent}
+        onError={clearIfCurrent}
         className="hidden"
       />
     </main>
@@ -235,8 +287,14 @@ function SpeakerButton({
       type="button"
       onClick={onClick}
       disabled={disabled}
-      title={disabled ? "Voice unavailable" : "Play this message"}
-      aria-label={active ? "Playing message" : "Play message aloud"}
+      title={
+        disabled
+          ? "Voice unavailable"
+          : active
+            ? "Stop playback"
+            : "Play this message"
+      }
+      aria-label={active ? "Stop playing message" : "Play message aloud"}
       className="shrink-0 rounded-full border border-gray-300 p-1.5 text-gray-600 disabled:opacity-40 dark:border-gray-700 dark:text-gray-300"
     >
       <svg
