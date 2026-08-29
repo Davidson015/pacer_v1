@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { toSpokenText } from "@/lib/speech";
 
 const DEFAULT_VOICE_ID = "21m00Tcm4TlvDq8ikWAM";
 const DEFAULT_MODEL_ID = "eleven_turbo_v2_5";
@@ -32,6 +33,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "text is required" }, { status: 400 });
   }
 
+  const spoken = toSpokenText(text);
   const voiceId = process.env.ELEVENLABS_VOICE_ID ?? DEFAULT_VOICE_ID;
   const response = await fetch(
     `https://api.elevenlabs.io/v1/text-to-speech/${voiceId}?output_format=mp3_44100_128`,
@@ -42,7 +44,7 @@ export async function POST(request: Request) {
         "xi-api-key": apiKey,
       },
       body: JSON.stringify({
-        text: text.slice(0, MAX_CHARACTERS),
+        text: spoken.slice(0, MAX_CHARACTERS),
         model_id: process.env.ELEVENLABS_MODEL_ID ?? DEFAULT_MODEL_ID,
         voice_settings: {
           stability: 0.4,
