@@ -69,20 +69,6 @@ export default function LeaderboardClient({ qrCode }: { qrCode?: ReactNode }) {
             Run the board.
           </h1>
         </div>
-        <nav className="flex flex-wrap items-center gap-3">
-          <a
-            href="/track"
-            className="min-h-11 rounded-full bg-[#c6ff00] px-5 py-3 text-sm font-black text-black hover:brightness-110"
-          >
-            Start tracking
-          </a>
-          <a
-            href="/live"
-            className="min-h-11 rounded-full border border-white/20 px-5 py-3 text-sm font-semibold hover:border-[#c6ff00] hover:text-[#c6ff00]"
-          >
-            Live run
-          </a>
-        </nav>
       </header>
 
       <main className="mx-auto grid w-full max-w-7xl flex-1 gap-8 px-5 py-8 sm:gap-10 sm:px-8 sm:py-10 lg:grid-cols-[1fr_320px]">

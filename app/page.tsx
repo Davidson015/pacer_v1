@@ -21,44 +21,6 @@ const SECTIONS = [
 export default function Home() {
   return (
     <div className="flex flex-1 flex-col bg-black text-white">
-      <header className="mx-auto flex w-full max-w-6xl flex-wrap items-center justify-between gap-4 px-6 py-6">
-        <span className="text-lg font-bold tracking-tight">
-          Pacer<span className="text-[#c6ff00]">.</span>
-        </span>
-        <nav className="flex max-w-full flex-wrap items-center justify-end gap-2">
-          <a
-            href="/build-map"
-            className="min-h-11 rounded-full border border-white/20 px-3 py-2 text-sm font-medium hover:border-[#c6ff00] hover:text-[#c6ff00]"
-          >
-            Build map
-          </a>
-          <a
-            href="/live"
-            className="min-h-11 rounded-full border border-white/20 px-3 py-2 text-sm font-medium hover:border-[#c6ff00] hover:text-[#c6ff00]"
-          >
-            Live run
-          </a>
-          <a
-            href="/leaderboard"
-            className="min-h-11 rounded-full border border-white/20 px-3 py-2 text-sm font-medium hover:border-[#c6ff00] hover:text-[#c6ff00]"
-          >
-            Leaderboard
-          </a>
-          <a
-            href="/track"
-            className="min-h-11 rounded-full border border-white/20 px-3 py-2 text-sm font-medium hover:border-[#c6ff00] hover:text-[#c6ff00]"
-          >
-            Track
-          </a>
-          <a
-            href="/coach"
-            className="min-h-11 rounded-full border border-white/20 px-3 py-2 text-sm font-medium hover:border-[#c6ff00] hover:text-[#c6ff00]"
-          >
-            Open the coach
-          </a>
-        </nav>
-      </header>
-
       <main className="mx-auto flex w-full max-w-6xl flex-1 flex-col gap-24 px-6 pb-24">
         <section className="flex flex-col gap-8 pt-16 sm:pt-24">
           <p className="text-sm font-semibold tracking-[0.25em] text-[#c6ff00] uppercase">
@@ -105,12 +67,6 @@ export default function Home() {
           </a>
         </section>
       </main>
-
-      <footer className="border-t border-white/10 px-6 py-8">
-        <p className="mx-auto max-w-6xl text-sm text-white/40">
-          Pacer — the coach built by the run.
-        </p>
-      </footer>
     </div>
   );
 }

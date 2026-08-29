@@ -240,12 +240,6 @@ export default function TrackPage() {
             Put your run <span className="text-[#c6ff00]">on the board.</span>
           </h1>
         </div>
-        <a
-          href="/leaderboard"
-          className="min-h-11 rounded-full border border-white/20 px-5 py-3 text-sm font-semibold hover:border-[#c6ff00] hover:text-[#c6ff00]"
-        >
-          View leaderboard
-        </a>
       </header>
 
       <main className="mx-auto flex w-full max-w-5xl flex-1 flex-col gap-8 px-5 py-8 sm:gap-10 sm:px-8 sm:py-10">
