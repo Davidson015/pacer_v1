@@ -6,7 +6,7 @@ import {
   runContext,
   type ChatMessage,
 } from "@/lib/coach";
-import { summarize } from "@/lib/run";
+import { latestRunnerPoints, summarize } from "@/lib/run";
 import { getGreeting, listPoints } from "@/lib/store";
 
 export const dynamic = "force-dynamic";
@@ -51,9 +51,20 @@ export async function POST(request: Request) {
 
   // Today's real run data is loaded fresh on every reply.
   const [points, greeting] = await Promise.all([listPoints(), getGreeting()]);
-  const summary = summarize(points);
+  const scopedPoints = latestRunnerPoints(points);
+  const summary = summarize(scopedPoints);
+  const runnerCount = new Set(
+    points.map((point) => `${point.runnerName}|${point.teamName}`),
+  ).size;
+  const otherRunnerCount = Math.max(
+    0,
+    runnerCount - (scopedPoints.length > 0 ? 1 : 0),
+  );
   const context = [
     runContext(summary),
+    scopedPoints.length > 0
+      ? `Other runners tracked today: ${otherRunnerCount} (their numbers are not included here).`
+      : null,
     greeting
       ? `GREETING DIRECTIVE: open your first reply of a new conversation with: "${greeting}"`
       : null,

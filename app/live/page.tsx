@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { summarize, type RunPoint, type RunSummary } from "@/lib/run";
+import { latestRunnerPoints, summarize, type RunSummary } from "@/lib/run";
 
 const REFRESH_MS = 10000;
 
@@ -19,15 +19,6 @@ function currentPace(run: RunSummary): number | null {
   if (lastLap?.paceMinPerKm != null) return lastLap.paceMinPerKm;
   const last = run.points[run.points.length - 1];
   return last ? last.pace : null;
-}
-
-function latestPoint(points: RunPoint[]): RunPoint | null {
-  return points.reduce<RunPoint | null>((latest, point) => {
-    if (!latest || Date.parse(point.timestamp) > Date.parse(latest.timestamp)) {
-      return point;
-    }
-    return latest;
-  }, null);
 }
 
 type Route = { path: string; head: { x: number; y: number } };
@@ -126,14 +117,8 @@ export default function LivePage() {
         signupResponse.json() as Promise<{ signupCount?: number }>,
         leaderboardResponse.json() as Promise<{ runnerCount?: number }>,
       ]);
-      const latest = latestPoint(summary.points);
-      const scopedPoints = latest
-        ? summary.points.filter(
-            (point) =>
-              point.runnerName === latest.runnerName &&
-              point.teamName === latest.teamName,
-          )
-        : [];
+      const scopedPoints = latestRunnerPoints(summary.points);
+      const latest = scopedPoints[scopedPoints.length - 1] ?? null;
       setRun(summarize(scopedPoints));
       setActiveRunner(
         latest

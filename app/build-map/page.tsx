@@ -10,7 +10,7 @@ import {
   type Commit,
   type Pin,
 } from "@/lib/build-map";
-import type { RunSummary } from "@/lib/run";
+import { groupPointsByRunner, summarize, type RunSummary } from "@/lib/run";
 
 const COMMITS = commitData as Commit[];
 const REFRESH_MS = 10000;
@@ -135,6 +135,17 @@ export default function BuildMapPage() {
   const points = run?.points ?? EMPTY_POINTS;
   const pins = useMemo(() => buildPins(COMMITS, points), [points]);
   const positions = useMemo(() => placePins(pins), [pins]);
+  const runnerSummaries = useMemo(
+    () =>
+      groupPointsByRunner(points).map((runnerPoints) =>
+        summarize(runnerPoints),
+      ),
+    [points],
+  );
+  const totalDistanceMeters = runnerSummaries.reduce(
+    (total, summary) => total + summary.totalDistanceMeters,
+    0,
+  );
   const active = pins[selected] ?? pins[pins.length - 1] ?? null;
   const runnerCount =
     points.length === 0
@@ -165,7 +176,7 @@ export default function BuildMapPage() {
             label="Total distance"
             value={
               run && points.length > 0
-                ? (run.totalDistanceMeters / 1000).toFixed(2)
+                ? (totalDistanceMeters / 1000).toFixed(2)
                 : "—"
             }
             unit={run && points.length > 0 ? "km" : undefined}

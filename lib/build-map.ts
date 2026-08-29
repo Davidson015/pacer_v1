@@ -96,13 +96,29 @@ function cumulativeDistances(points: RunPoint[]): number[] {
   return cumulative;
 }
 
+function runnerKey(point: RunPoint): string {
+  return `${point.runnerName}|${point.teamName}`;
+}
+
 /**
  * Pins every commit onto the track at the position of the run point closest in
  * time. Without run data, commits are spread evenly around the lap in order so
  * the map still reads, with distance left null to mark the position as unknown.
  */
 export function buildPins(commits: Commit[], points: RunPoint[]): Pin[] {
-  const cumulative = cumulativeDistances(points);
+  const sequences = new Map<
+    string,
+    { points: RunPoint[]; cumulative: number[] }
+  >();
+  for (const point of points) {
+    const key = runnerKey(point);
+    const sequence = sequences.get(key) ?? { points: [], cumulative: [] };
+    sequence.points.push(point);
+    sequences.set(key, sequence);
+  }
+  for (const sequence of sequences.values()) {
+    sequence.cumulative = cumulativeDistances(sequence.points);
+  }
   const times = points.map((point) => Date.parse(point.timestamp));
 
   return commits.map((commit, index) => {
@@ -134,16 +150,37 @@ export function buildPins(commits: Commit[], points: RunPoint[]): Pin[] {
       }
     }
 
-    const metres = cumulative[closest];
+    const matchedPoint = points[closest];
+    const sequence = sequences.get(runnerKey(matchedPoint));
+    const sequenceIndex = sequence?.points.indexOf(matchedPoint) ?? -1;
+    if (!sequence || sequenceIndex < 0) {
+      return {
+        commit,
+        distanceMeters: null,
+        lapNumber: 0,
+        runnerName: null,
+        teamName: null,
+        matchedTimestamp: null,
+        latitude: null,
+        longitude: null,
+        metersIntoLap: null,
+        matchOffsetSeconds: null,
+        ...trackPosition(
+          (index / Math.max(1, commits.length)) * TRACK_LAP_METERS,
+        ),
+      };
+    }
+
+    const metres = sequence.cumulative[sequenceIndex];
     return {
       commit,
       distanceMeters: metres,
       lapNumber: Math.floor(metres / TRACK_LAP_METERS) + 1,
-      runnerName: points[closest].runnerName,
-      teamName: points[closest].teamName,
-      matchedTimestamp: points[closest].timestamp,
-      latitude: points[closest].latitude,
-      longitude: points[closest].longitude,
+      runnerName: matchedPoint.runnerName,
+      teamName: matchedPoint.teamName,
+      matchedTimestamp: matchedPoint.timestamp,
+      latitude: matchedPoint.latitude,
+      longitude: matchedPoint.longitude,
       metersIntoLap: metres % TRACK_LAP_METERS,
       matchOffsetSeconds: Math.round(
         Math.abs(times[closest] - commitTime) / 1000,

@@ -99,6 +99,36 @@ export function distanceMeters(a: RunPoint, b: RunPoint): number {
   return 2 * EARTH_RADIUS_METERS * Math.asin(Math.min(1, Math.sqrt(h)));
 }
 
+export function latestRunnerPoints(points: RunPoint[]): RunPoint[] {
+  const latest = points.reduce<RunPoint | null>((current, point) => {
+    if (
+      !current ||
+      Date.parse(point.timestamp) > Date.parse(current.timestamp)
+    ) {
+      return point;
+    }
+    return current;
+  }, null);
+
+  if (!latest) return [];
+  return points.filter(
+    (point) =>
+      point.runnerName === latest.runnerName &&
+      point.teamName === latest.teamName,
+  );
+}
+
+export function groupPointsByRunner(points: RunPoint[]): RunPoint[][] {
+  const groups = new Map<string, RunPoint[]>();
+  for (const point of points) {
+    const key = `${point.runnerName}|${point.teamName}`;
+    const group = groups.get(key) ?? [];
+    group.push(point);
+    groups.set(key, group);
+  }
+  return [...groups.values()];
+}
+
 function paceMinPerKm(distanceMeters: number, durationSeconds: number) {
   return durationSeconds / 60 / (distanceMeters / 1000);
 }
