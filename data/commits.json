@@ -112,5 +112,47 @@
     "isoDate": "2026-08-29T16:01:13+00:00",
     "subject": "Drop commit trailers from build map detail bodies",
     "body": ""
+  },
+  {
+    "hash": "739a693",
+    "isoDate": "2026-08-29T16:01:13+00:00",
+    "subject": "Refresh build map commit snapshot",
+    "body": ""
+  },
+  {
+    "hash": "a30e6ce",
+    "isoDate": "2026-08-29T16:12:05+00:00",
+    "subject": "Add runner registry and GPS tracking page",
+    "body": ""
+  },
+  {
+    "hash": "81b0224",
+    "isoDate": "2026-08-29T16:12:34+00:00",
+    "subject": "Add deterministic runner leaderboard",
+    "body": ""
+  },
+  {
+    "hash": "448e309",
+    "isoDate": "2026-08-29T16:12:53+00:00",
+    "subject": "Add scannable leaderboard track QR code",
+    "body": ""
+  },
+  {
+    "hash": "9a2dfa6",
+    "isoDate": "2026-08-29T16:13:08+00:00",
+    "subject": "Add leaderboard and tracking counts to live pages",
+    "body": ""
+  },
+  {
+    "hash": "4e26ea6",
+    "isoDate": "2026-08-29T16:15:07+00:00",
+    "subject": "Fix client data initialization lint warning",
+    "body": ""
+  },
+  {
+    "hash": "937fadd",
+    "isoDate": "2026-08-29T16:16:03+00:00",
+    "subject": "Keep the first GPS fix as the pace baseline while tracking",
+    "body": ""
   }
 ]
