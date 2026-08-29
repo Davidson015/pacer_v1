@@ -290,12 +290,10 @@ export default function CoachPage() {
   }
 
   return (
-    <main className="mx-auto flex min-h-0 w-full max-w-2xl flex-1 flex-col gap-4 p-4 sm:p-6">
+    <main className="mx-auto flex min-h-0 w-full max-w-2xl flex-1 flex-col gap-4 bg-black p-4 text-white sm:p-6">
       <header>
         <h1 className="text-3xl font-bold tracking-tight">Coach</h1>
-        <p className="text-sm text-gray-600 dark:text-gray-400">
-          the coach built by the run
-        </p>
+        <p className="text-sm text-white/60">the coach built by the run</p>
       </header>
 
       <div className="flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto">
@@ -318,8 +316,8 @@ export default function CoachPage() {
             <div
               className={
                 message.role === "user"
-                  ? "max-w-[calc(100vw-5rem)] rounded-2xl bg-blue-600 px-4 py-2 break-words whitespace-pre-wrap text-white sm:max-w-[85%]"
-                  : "max-w-[calc(100vw-5rem)] rounded-2xl bg-gray-100 px-4 py-2 break-words whitespace-pre-wrap dark:bg-gray-800 sm:max-w-[85%]"
+                  ? "max-w-[calc(100vw-5rem)] rounded-2xl bg-[#c6ff00] px-4 py-2 break-words whitespace-pre-wrap text-black sm:max-w-[85%]"
+                  : "max-w-[calc(100vw-5rem)] rounded-2xl bg-white/5 px-4 py-2 break-words whitespace-pre-wrap text-white sm:max-w-[85%]"
               }
             >
               {message.content}
@@ -334,29 +332,29 @@ export default function CoachPage() {
           </div>
         ))}
         {pending && (
-          <div className="self-start text-sm text-gray-500">
+          <div className="self-start text-sm text-white/50">
             Coach is checking your splits…
           </div>
         )}
-        {error && <div className="text-sm text-red-600">{error}</div>}
+        {error && <div className="text-sm text-red-300">{error}</div>}
       </div>
 
       {thin && (
-        <p className="text-sm text-amber-700 dark:text-amber-500">
+        <p className="text-sm text-[#c6ff00]/80">
           Not enough run data for lap analysis yet — the coach will only quote
           what has actually been recorded.
         </p>
       )}
 
       {!voiceReady && (
-        <p className="text-sm text-gray-500">
+        <p className="text-sm text-white/50">
           Voice is off — set ELEVENLABS_API_KEY to hear the coach.
         </p>
       )}
-      {voiceError && <p className="text-sm text-red-600">{voiceError}</p>}
-      {micError && <p className="text-sm text-red-600">{micError}</p>}
+      {voiceError && <p className="text-sm text-red-300">{voiceError}</p>}
+      {micError && <p className="text-sm text-red-300">{micError}</p>}
       {listening && (
-        <p className="text-sm text-blue-600">Listening — ask your question.</p>
+        <p className="text-sm text-[#c6ff00]">Listening — ask your question.</p>
       )}
 
       <div className="flex flex-wrap gap-2">
@@ -366,7 +364,7 @@ export default function CoachPage() {
             type="button"
             onClick={() => void ask(question)}
             disabled={pending}
-            className="min-h-11 rounded-full border border-gray-300 px-4 py-2 text-sm text-gray-700 disabled:opacity-50 dark:border-gray-700 dark:text-gray-300"
+            className="min-h-11 rounded-full border border-white/10 px-4 py-2 text-sm text-white/70 hover:border-[#c6ff00] hover:text-[#c6ff00] disabled:opacity-50"
           >
             {question}
           </button>
@@ -375,7 +373,7 @@ export default function CoachPage() {
 
       <form
         onSubmit={send}
-        className="sticky bottom-0 flex gap-2 bg-white py-1 dark:bg-black"
+        className="sticky bottom-0 flex gap-2 bg-black py-1"
       >
         <button
           type="button"
@@ -387,7 +385,7 @@ export default function CoachPage() {
           className={
             listening
               ? "min-h-11 min-w-11 shrink-0 rounded-full bg-red-600 px-3 py-2 text-white"
-              : "min-h-11 min-w-11 shrink-0 rounded-full border border-gray-300 px-3 py-2 text-gray-600 disabled:opacity-40 dark:border-gray-700 dark:text-gray-300"
+              : "min-h-11 min-w-11 shrink-0 rounded-full border border-white/10 px-3 py-2 text-white/70 hover:border-[#c6ff00] hover:text-[#c6ff00] disabled:opacity-40"
           }
         >
           <svg
@@ -405,12 +403,12 @@ export default function CoachPage() {
           onChange={(event) => setInput(event.target.value)}
           placeholder="How am I pacing?"
           aria-label="Message the coach"
-          className="min-w-0 flex-1 rounded-full border border-gray-300 px-4 py-2 dark:border-gray-700 dark:bg-gray-900"
+          className="min-w-0 flex-1 rounded-full border border-white/10 bg-white/5 px-4 py-2 text-white placeholder:text-white/40 focus:border-[#c6ff00] focus:outline-none"
         />
         <button
           type="submit"
           disabled={pending || input.trim() === ""}
-          className="min-h-11 shrink-0 rounded-full bg-blue-600 px-5 py-2 font-medium text-white disabled:opacity-50"
+          className="min-h-11 shrink-0 rounded-full bg-[#c6ff00] px-5 py-2 font-medium text-black hover:brightness-110 disabled:opacity-50"
         >
           Send
         </button>
@@ -448,7 +446,7 @@ function SpeakerButton({
             : "Play this message"
       }
       aria-label={active ? "Stop playing message" : "Play message aloud"}
-      className="min-h-11 min-w-11 shrink-0 rounded-full border border-gray-300 p-2 text-gray-600 disabled:opacity-40 dark:border-gray-700 dark:text-gray-300"
+      className="min-h-11 min-w-11 shrink-0 rounded-full border border-white/10 p-2 text-white/70 hover:border-[#c6ff00] hover:text-[#c6ff00] disabled:opacity-40"
     >
       <svg
         viewBox="0 0 24 24"

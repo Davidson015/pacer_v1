@@ -72,9 +72,9 @@ export function SignupForm() {
               {" "}
               <a
                 href="/track"
-                className="font-semibold underline decoration-[#c6ff00]/60 underline-offset-2 hover:text-white"
+                className="mt-3 inline-flex min-h-11 items-center rounded-full bg-[#c6ff00] px-5 py-3 font-semibold text-black hover:brightness-110"
               >
-                Start a run →
+                Start your run
               </a>
             </>
           )}
