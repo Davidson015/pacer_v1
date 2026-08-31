@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { formatPace } from "@/lib/coach";
 import { summarize, type RunPoint, type RunSummary } from "@/lib/run";
 
@@ -84,6 +84,7 @@ export default function TrackPage() {
   const watchIdRef = useRef<number | null>(null);
   const lastPostAtRef = useRef(0);
   const lastAcceptedFixRef = useRef<AcceptedFix | null>(null);
+  const autoFinishRef = useRef(false);
 
   useEffect(() => {
     try {
@@ -94,9 +95,14 @@ export default function TrackPage() {
         typeof identity.runnerName === "string" &&
         typeof identity.teamName === "string"
       ) {
+        const restoredIdentity: RunnerIdentity = {
+          runnerName: identity.runnerName,
+          teamName: identity.teamName,
+        };
         const timeout = window.setTimeout(() => {
-          setRunnerName(identity.runnerName as string);
-          setTeamName(identity.teamName as string);
+          setRunnerName(restoredIdentity.runnerName);
+          setTeamName(restoredIdentity.teamName);
+          setRegistered(restoredIdentity);
         }, 0);
         return () => window.clearTimeout(timeout);
       }
@@ -150,20 +156,20 @@ export default function TrackPage() {
     }
   }
 
-  function clearWatch() {
+  const clearWatch = useCallback(() => {
     if (watchIdRef.current !== null) {
       navigator.geolocation.clearWatch(watchIdRef.current);
       watchIdRef.current = null;
     }
     setTracking(false);
-  }
+  }, []);
 
   function stopTracking() {
     clearWatch();
     setStatusMessage("Tracking stopped.");
   }
 
-  async function finishRun() {
+  const finishRun = useCallback(async () => {
     if (!registered || finishing) return;
 
     setFinishing(true);
@@ -197,7 +203,18 @@ export default function TrackPage() {
     } finally {
       setFinishing(false);
     }
-  }
+  }, [clearWatch, finishing, registered]);
+
+  useEffect(() => {
+    if (!registered || autoFinishRef.current) return;
+    const shouldFinish =
+      new URLSearchParams(window.location.search).get("finish") === "1";
+    if (!shouldFinish) return;
+
+    autoFinishRef.current = true;
+    const timeout = window.setTimeout(() => void finishRun(), 0);
+    return () => window.clearTimeout(timeout);
+  }, [finishRun, registered]);
 
   function startAnotherRun() {
     setFinishedRun(null);
@@ -357,33 +374,32 @@ export default function TrackPage() {
                 {registered.teamName}
               </p>
               <div className="mt-8 flex flex-wrap gap-4">
-                {!tracking ? (
+                {tracking && (
+                  <button
+                    type="button"
+                    onClick={stopTracking}
+                    className="min-h-11 rounded-full border border-red-400/60 px-7 py-4 text-lg font-black text-red-300 hover:border-red-300"
+                  >
+                    Pause tracking
+                  </button>
+                )}
+                {!tracking && (
                   <button
                     type="button"
                     onClick={startTracking}
-                    className="min-h-11 rounded-full bg-[#c6ff00] px-7 py-4 text-lg font-black text-black hover:brightness-110"
+                    className="min-h-11 rounded-full border border-white/20 px-7 py-4 text-lg font-semibold hover:border-[#c6ff00] hover:text-[#c6ff00]"
                   >
                     Start tracking
                   </button>
-                ) : (
-                  <>
-                    <button
-                      type="button"
-                      onClick={stopTracking}
-                      className="min-h-11 rounded-full border border-red-400/60 px-7 py-4 text-lg font-black text-red-300 hover:border-red-300"
-                    >
-                      Stop
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => void finishRun()}
-                      disabled={finishing}
-                      className="min-h-11 rounded-full bg-[#c6ff00] px-7 py-4 text-lg font-black text-black hover:brightness-110 disabled:opacity-60"
-                    >
-                      {finishing ? "Finishing…" : "Finish run"}
-                    </button>
-                  </>
                 )}
+                <button
+                  type="button"
+                  onClick={() => void finishRun()}
+                  disabled={finishing}
+                  className="min-h-11 rounded-full bg-[#c6ff00] px-7 py-4 text-lg font-black text-black hover:brightness-110 disabled:opacity-60"
+                >
+                  {finishing ? "Finishing…" : "Finish run"}
+                </button>
                 <a
                   href="/leaderboard"
                   className="min-h-11 rounded-full border border-white/20 px-7 py-4 text-lg font-semibold hover:border-[#c6ff00] hover:text-[#c6ff00]"
