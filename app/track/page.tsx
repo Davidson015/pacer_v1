@@ -1,6 +1,8 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { formatPace } from "@/lib/coach";
+import { summarize, type RunPoint, type RunSummary } from "@/lib/run";
 
 const STORAGE_KEY = "pacer-runner";
 const POST_INTERVAL_MS = 10000;
@@ -77,9 +79,12 @@ export default function TrackPage() {
   const [lastFixTime, setLastFixTime] = useState<string | null>(null);
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [finishing, setFinishing] = useState(false);
+  const [finishedRun, setFinishedRun] = useState<RunSummary | null>(null);
   const watchIdRef = useRef<number | null>(null);
   const lastPostAtRef = useRef(0);
   const lastAcceptedFixRef = useRef<AcceptedFix | null>(null);
+  const autoFinishRef = useRef(false);
 
   useEffect(() => {
     try {
@@ -90,9 +95,14 @@ export default function TrackPage() {
         typeof identity.runnerName === "string" &&
         typeof identity.teamName === "string"
       ) {
+        const restoredIdentity: RunnerIdentity = {
+          runnerName: identity.runnerName,
+          teamName: identity.teamName,
+        };
         const timeout = window.setTimeout(() => {
-          setRunnerName(identity.runnerName as string);
-          setTeamName(identity.teamName as string);
+          setRunnerName(restoredIdentity.runnerName);
+          setTeamName(restoredIdentity.teamName);
+          setRegistered(restoredIdentity);
         }, 0);
         return () => window.clearTimeout(timeout);
       }
@@ -146,13 +156,74 @@ export default function TrackPage() {
     }
   }
 
-  function stopTracking() {
+  const clearWatch = useCallback(() => {
     if (watchIdRef.current !== null) {
       navigator.geolocation.clearWatch(watchIdRef.current);
       watchIdRef.current = null;
     }
     setTracking(false);
+  }, []);
+
+  function stopTracking() {
+    clearWatch();
     setStatusMessage("Tracking stopped.");
+  }
+
+  const finishRun = useCallback(async () => {
+    if (!registered || finishing) return;
+
+    setFinishing(true);
+    setError(null);
+    clearWatch();
+    try {
+      const response = await fetch("/api/run", { cache: "no-store" });
+      const data = (await response.json()) as {
+        points?: RunPoint[];
+        error?: string;
+      };
+      if (!response.ok) {
+        throw new Error(data.error ?? "could not load your finished run");
+      }
+
+      const runnerPoints = Array.isArray(data.points)
+        ? data.points.filter(
+            (point) =>
+              point.runnerName === registered.runnerName &&
+              point.teamName === registered.teamName,
+          )
+        : [];
+      setFinishedRun(summarize(runnerPoints));
+      setStatusMessage(null);
+    } catch (caught) {
+      setError(
+        caught instanceof Error
+          ? caught.message
+          : "could not load your finished run",
+      );
+    } finally {
+      setFinishing(false);
+    }
+  }, [clearWatch, finishing, registered]);
+
+  useEffect(() => {
+    if (!registered || autoFinishRef.current) return;
+    const shouldFinish =
+      new URLSearchParams(window.location.search).get("finish") === "1";
+    if (!shouldFinish) return;
+
+    autoFinishRef.current = true;
+    const timeout = window.setTimeout(() => void finishRun(), 0);
+    return () => window.clearTimeout(timeout);
+  }, [finishRun, registered]);
+
+  function startAnotherRun() {
+    setFinishedRun(null);
+    setPointsSent(0);
+    setLastFixTime(null);
+    setStatusMessage(null);
+    setError(null);
+    lastPostAtRef.current = 0;
+    lastAcceptedFixRef.current = null;
   }
 
   function startTracking() {
@@ -240,138 +311,247 @@ export default function TrackPage() {
             Put your run <span className="text-[#c6ff00]">on the board.</span>
           </h1>
         </div>
-        <a
-          href="/leaderboard"
-          className="min-h-11 rounded-full border border-white/20 px-5 py-3 text-sm font-semibold hover:border-[#c6ff00] hover:text-[#c6ff00]"
-        >
-          View leaderboard
-        </a>
       </header>
 
-      <main className="mx-auto flex w-full max-w-5xl flex-1 flex-col gap-8 px-5 py-8 sm:gap-10 sm:px-8 sm:py-10">
-        {!registered ? (
-          <section className="max-w-xl rounded-3xl border border-[#c6ff00]/30 bg-[#c6ff00]/[0.06] p-6 sm:p-10">
-            <p className="text-sm font-semibold tracking-[0.2em] text-[#c6ff00] uppercase">
-              Join the run
-            </p>
-            <h2 className="mt-3 text-3xl font-black tracking-tight sm:text-4xl">
-              Who is running today?
-            </h2>
-            <form
-              onSubmit={registerRunner}
-              className="mt-8 flex flex-col gap-4"
-            >
-              <label className="flex flex-col gap-2 text-sm font-semibold text-white/60">
-                Your name
-                <input
-                  required
-                  value={runnerName}
-                  onChange={(event) => setRunnerName(event.target.value)}
-                  placeholder="Alex Morgan"
-                  className="min-w-0 rounded-2xl border border-white/15 bg-white/5 px-5 py-4 text-lg text-white placeholder:text-white/30 focus:border-[#c6ff00] focus:outline-none"
-                />
-              </label>
-              <label className="flex flex-col gap-2 text-sm font-semibold text-white/60">
-                Team name
-                <input
-                  required
-                  value={teamName}
-                  onChange={(event) => setTeamName(event.target.value)}
-                  placeholder="Pacer Track Club"
-                  className="min-w-0 rounded-2xl border border-white/15 bg-white/5 px-5 py-4 text-lg text-white placeholder:text-white/30 focus:border-[#c6ff00] focus:outline-none"
-                />
-              </label>
-              <button
-                type="submit"
-                disabled={registering}
-                className="mt-2 min-h-11 rounded-full bg-[#c6ff00] px-6 py-4 text-lg font-black text-black hover:brightness-110 disabled:opacity-60"
+      {finishedRun ? (
+        <FinishedRun
+          summary={finishedRun}
+          runner={registered}
+          onStartAnotherRun={startAnotherRun}
+        />
+      ) : (
+        <main className="mx-auto flex w-full max-w-5xl flex-1 flex-col gap-8 px-5 py-8 sm:gap-10 sm:px-8 sm:py-10">
+          {!registered ? (
+            <section className="max-w-xl rounded-3xl border border-[#c6ff00]/30 bg-[#c6ff00]/[0.06] p-6 sm:p-10">
+              <p className="text-sm font-semibold tracking-[0.2em] text-[#c6ff00] uppercase">
+                Join the run
+              </p>
+              <h2 className="mt-3 text-3xl font-black tracking-tight sm:text-4xl">
+                Who is running today?
+              </h2>
+              <form
+                onSubmit={registerRunner}
+                className="mt-8 flex flex-col gap-4"
               >
-                {registering ? "Joining…" : "Join leaderboard"}
-              </button>
-            </form>
-          </section>
-        ) : (
-          <section className="rounded-3xl border border-[#c6ff00]/30 bg-[#c6ff00]/[0.06] p-6 sm:p-10">
-            <p className="text-sm font-semibold tracking-[0.2em] text-[#c6ff00] uppercase">
-              Ready to run
-            </p>
-            <h2 className="mt-3 break-words text-3xl font-black tracking-tight sm:text-6xl">
-              {registered.runnerName}
-            </h2>
-            <p className="mt-2 text-2xl font-bold text-white/50">
-              {registered.teamName}
-            </p>
-            <div className="mt-8 flex flex-wrap gap-4">
-              {!tracking ? (
+                <label className="flex flex-col gap-2 text-sm font-semibold text-white/60">
+                  Your name
+                  <input
+                    required
+                    value={runnerName}
+                    onChange={(event) => setRunnerName(event.target.value)}
+                    placeholder="Alex Morgan"
+                    className="min-w-0 rounded-2xl border border-white/15 bg-white/5 px-5 py-4 text-lg text-white placeholder:text-white/30 focus:border-[#c6ff00] focus:outline-none"
+                  />
+                </label>
+                <label className="flex flex-col gap-2 text-sm font-semibold text-white/60">
+                  Team name
+                  <input
+                    required
+                    value={teamName}
+                    onChange={(event) => setTeamName(event.target.value)}
+                    placeholder="Pacer Track Club"
+                    className="min-w-0 rounded-2xl border border-white/15 bg-white/5 px-5 py-4 text-lg text-white placeholder:text-white/30 focus:border-[#c6ff00] focus:outline-none"
+                  />
+                </label>
+                <button
+                  type="submit"
+                  disabled={registering}
+                  className="mt-2 min-h-11 rounded-full bg-[#c6ff00] px-6 py-4 text-lg font-black text-black hover:brightness-110 disabled:opacity-60"
+                >
+                  {registering ? "Joining…" : "Join leaderboard"}
+                </button>
+              </form>
+            </section>
+          ) : (
+            <section className="rounded-3xl border border-[#c6ff00]/30 bg-[#c6ff00]/[0.06] p-6 sm:p-10">
+              <p className="text-sm font-semibold tracking-[0.2em] text-[#c6ff00] uppercase">
+                Ready to run
+              </p>
+              <h2 className="mt-3 break-words text-3xl font-black tracking-tight sm:text-6xl">
+                {registered.runnerName}
+              </h2>
+              <p className="mt-2 text-2xl font-bold text-white/50">
+                {registered.teamName}
+              </p>
+              <div className="mt-8 flex flex-wrap gap-4">
+                {tracking && (
+                  <button
+                    type="button"
+                    onClick={stopTracking}
+                    className="min-h-11 rounded-full border border-red-400/60 px-7 py-4 text-lg font-black text-red-300 hover:border-red-300"
+                  >
+                    Pause tracking
+                  </button>
+                )}
+                {!tracking && (
+                  <button
+                    type="button"
+                    onClick={startTracking}
+                    className="min-h-11 rounded-full border border-white/20 px-7 py-4 text-lg font-semibold hover:border-[#c6ff00] hover:text-[#c6ff00]"
+                  >
+                    Start tracking
+                  </button>
+                )}
                 <button
                   type="button"
-                  onClick={startTracking}
-                  className="min-h-11 rounded-full bg-[#c6ff00] px-7 py-4 text-lg font-black text-black hover:brightness-110"
+                  onClick={() => void finishRun()}
+                  disabled={finishing}
+                  className="min-h-11 rounded-full bg-[#c6ff00] px-7 py-4 text-lg font-black text-black hover:brightness-110 disabled:opacity-60"
                 >
-                  Start tracking
+                  {finishing ? "Finishing…" : "Finish run"}
                 </button>
-              ) : (
-                <button
-                  type="button"
-                  onClick={stopTracking}
-                  className="min-h-11 rounded-full border border-red-400/60 px-7 py-4 text-lg font-black text-red-300 hover:border-red-300"
+                <a
+                  href="/leaderboard"
+                  className="min-h-11 rounded-full border border-white/20 px-7 py-4 text-lg font-semibold hover:border-[#c6ff00] hover:text-[#c6ff00]"
                 >
-                  Stop
-                </button>
-              )}
-              <a
-                href="/leaderboard"
-                className="min-h-11 rounded-full border border-white/20 px-7 py-4 text-lg font-semibold hover:border-[#c6ff00] hover:text-[#c6ff00]"
-              >
-                Leaderboard
-              </a>
+                  Leaderboard
+                </a>
+              </div>
+            </section>
+          )}
+
+          <section className="grid gap-6 rounded-3xl border border-white/10 bg-white/[0.03] p-6 sm:grid-cols-3 sm:gap-8 sm:p-10">
+            <div>
+              <p className="text-xs font-semibold tracking-[0.2em] text-white/40 uppercase">
+                Points sent
+              </p>
+              <p className="mt-2 text-5xl font-black tabular-nums text-[#c6ff00]">
+                {pointsSent}
+              </p>
+            </div>
+            <div>
+              <p className="text-xs font-semibold tracking-[0.2em] text-white/40 uppercase">
+                Last fix
+              </p>
+              <p className="mt-2 break-words text-2xl font-bold">
+                {lastFixTime ?? "—"}
+              </p>
+            </div>
+            <div>
+              <p className="text-xs font-semibold tracking-[0.2em] text-white/40 uppercase">
+                Status
+              </p>
+              <p className="mt-2 break-words text-lg font-semibold text-white/70">
+                {tracking ? "Listening for GPS" : (statusMessage ?? "Ready")}
+              </p>
             </div>
           </section>
-        )}
 
-        <section className="grid gap-6 rounded-3xl border border-white/10 bg-white/[0.03] p-6 sm:grid-cols-3 sm:gap-8 sm:p-10">
-          <div>
-            <p className="text-xs font-semibold tracking-[0.2em] text-white/40 uppercase">
-              Points sent
+          {(statusMessage || error) && (
+            <p
+              role="status"
+              className={
+                error ? "text-base text-red-300" : "text-base text-[#c6ff00]"
+              }
+            >
+              {error ?? statusMessage}
             </p>
-            <p className="mt-2 text-5xl font-black tabular-nums text-[#c6ff00]">
-              {pointsSent}
-            </p>
-          </div>
-          <div>
-            <p className="text-xs font-semibold tracking-[0.2em] text-white/40 uppercase">
-              Last fix
-            </p>
-            <p className="mt-2 break-words text-2xl font-bold">
-              {lastFixTime ?? "—"}
-            </p>
-          </div>
-          <div>
-            <p className="text-xs font-semibold tracking-[0.2em] text-white/40 uppercase">
-              Status
-            </p>
-            <p className="mt-2 break-words text-lg font-semibold text-white/70">
-              {tracking ? "Listening for GPS" : (statusMessage ?? "Ready")}
-            </p>
-          </div>
-        </section>
+          )}
+          <p className="max-w-2xl text-sm leading-relaxed text-white/40">
+            GPS fixes are sent at most once every ten seconds. Pace comes from
+            your device or the distance between accepted fixes; if neither is
+            available, no point is invented or sent.
+          </p>
+        </main>
+      )}
+    </div>
+  );
+}
 
-        {(statusMessage || error) && (
-          <p
-            role="status"
-            className={
-              error ? "text-base text-red-300" : "text-base text-[#c6ff00]"
-            }
-          >
-            {error ?? statusMessage}
+function FinishedRun({
+  summary,
+  runner,
+  onStartAnotherRun,
+}: {
+  summary: RunSummary;
+  runner: RunnerIdentity | null;
+  onStartAnotherRun: () => void;
+}) {
+  const hasDistance = summary.totalDistanceMeters > 0;
+  const hasAveragePace =
+    hasDistance &&
+    summary.elapsedSeconds > 0 &&
+    summary.averagePaceMinPerKm !== null;
+
+  return (
+    <main className="mx-auto flex w-full max-w-5xl flex-1 flex-col gap-8 px-5 py-8 sm:gap-10 sm:px-8 sm:py-10">
+      <section className="rounded-3xl border border-[#c6ff00]/30 bg-[#c6ff00]/[0.06] p-6 sm:p-10">
+        <p className="text-sm font-semibold tracking-[0.2em] text-[#c6ff00] uppercase">
+          Run complete
+        </p>
+        <h2 className="mt-3 break-words text-3xl font-black tracking-tight sm:text-6xl">
+          {runner?.runnerName ?? "Your run"}
+        </h2>
+        {runner && (
+          <p className="mt-2 text-2xl font-bold text-white/50">
+            {runner.teamName}
           </p>
         )}
-        <p className="max-w-2xl text-sm leading-relaxed text-white/40">
-          GPS fixes are sent at most once every ten seconds. Pace comes from
-          your device or the distance between accepted fixes; if neither is
-          available, no point is invented or sent.
-        </p>
-      </main>
+
+        {summary.pointCount === 0 ? (
+          <p className="mt-8 max-w-2xl text-lg leading-relaxed text-white/70">
+            No run points were recorded, so there is no distance, lap count, or
+            pace to report yet.
+          </p>
+        ) : !hasDistance ? (
+          <p className="mt-8 max-w-2xl text-lg leading-relaxed text-white/70">
+            Points were recorded, but no movement could be measured, so there is
+            no distance, lap count, or average pace to report yet.
+          </p>
+        ) : (
+          <div className="mt-8 grid gap-6 sm:grid-cols-3 sm:gap-8">
+            <FinishStat
+              label="Distance"
+              value={`${(summary.totalDistanceMeters / 1000).toFixed(2)} km`}
+            />
+            <FinishStat
+              label="400 m laps"
+              value={summary.lapCount.toFixed(1)}
+            />
+            <FinishStat
+              label="Average pace"
+              value={
+                hasAveragePace ? formatPace(summary.averagePaceMinPerKm) : "—"
+              }
+            />
+          </div>
+        )}
+
+        <div className="mt-8 flex flex-wrap gap-4">
+          <a
+            href="/coach"
+            className="min-h-11 rounded-full bg-[#c6ff00] px-6 py-4 text-lg font-black text-black hover:brightness-110"
+          >
+            Ask your coach →
+          </a>
+          <a
+            href="/leaderboard"
+            className="min-h-11 rounded-full bg-[#c6ff00] px-6 py-4 text-lg font-black text-black hover:brightness-110"
+          >
+            See the board →
+          </a>
+        </div>
+        <button
+          type="button"
+          onClick={onStartAnotherRun}
+          className="mt-5 min-h-11 rounded-full border border-white/20 px-6 py-3 font-semibold text-white/70 hover:border-[#c6ff00] hover:text-[#c6ff00]"
+        >
+          Start another run
+        </button>
+      </section>
+    </main>
+  );
+}
+
+function FinishStat({ label, value }: { label: string; value: string }) {
+  return (
+    <div>
+      <p className="text-sm font-semibold tracking-[0.2em] text-white/50 uppercase">
+        {label}
+      </p>
+      <p className="mt-2 text-4xl font-black tabular-nums text-white sm:text-5xl">
+        {value}
+      </p>
     </div>
   );
 }

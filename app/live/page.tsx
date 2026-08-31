@@ -166,14 +166,25 @@ export default function LivePage() {
           {error ?? `updated ${updatedAt ?? "…"} · every 10s`}
         </p>
       </header>
-      <p className="border-b border-white/10 px-5 py-3 text-sm text-white/50 sm:px-8 sm:text-base">
-        showing{" "}
-        {activeRunner
-          ? `${activeRunner.runnerName} · ${activeRunner.teamName} run`
-          : "—"}{" "}
-        · {runnerCount === null ? "—" : runnerCount} runners today · full board
-        on /leaderboard
-      </p>
+      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-white/10 px-5 py-3 sm:px-8">
+        <p className="text-sm text-white/50 sm:text-base">
+          showing{" "}
+          {activeRunner
+            ? `${activeRunner.runnerName} · ${activeRunner.teamName} run`
+            : "—"}{" "}
+          · {runnerCount === null ? "—" : runnerCount} runners today · full
+          board on /leaderboard
+        </p>
+        {activeRunner && (
+          <a
+            href="/track?finish=1"
+            aria-label={`Finish ${activeRunner.runnerName}'s run`}
+            className="min-h-11 shrink-0 rounded-full bg-[#c6ff00] px-5 py-3 text-sm font-black text-black hover:brightness-110 sm:text-base"
+          >
+            Finish run →
+          </a>
+        )}
+      </div>
 
       <main className="grid flex-1 gap-8 px-5 py-8 sm:gap-10 sm:px-8 sm:py-10 lg:grid-cols-[1.1fr_1fr]">
         <section className="flex flex-col gap-4">

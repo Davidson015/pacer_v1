@@ -28,9 +28,7 @@ export function SignupForm() {
 
       setStatus("done");
       setMessage(
-        data.alreadySignedUp
-          ? "You're already on the list. We'll call your splits soon."
-          : "You're in. We'll be trackside when you are.",
+        data.alreadySignedUp ? "You're already on the list." : "You're in.",
       );
       setEmail("");
     } catch (caught) {
@@ -69,6 +67,17 @@ export function SignupForm() {
           }
         >
           {message}
+          {status === "done" && (
+            <>
+              {" "}
+              <a
+                href="/track"
+                className="mt-3 inline-flex min-h-11 items-center rounded-full bg-[#c6ff00] px-5 py-3 font-semibold text-black hover:brightness-110"
+              >
+                Start your run
+              </a>
+            </>
+          )}
         </p>
       )}
     </form>
